@@ -32,8 +32,8 @@ public class LLMController {
         String textIn = (prompt == null || prompt.isBlank()) ? "Say this is a test" : prompt;
 
         ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
-                .model(ChatModel.GPT_5_NANO) // GPT_4O_MINI etc. also fine
-                .addUserMessage(textIn)         // helper provided by the SDK starter
+                .model(ChatModel.GPT_5_NANO)
+                .addUserMessage(textIn)
                 .build();
 
         ChatCompletion chat = client.chat().completions().create(params);

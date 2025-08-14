@@ -1,4 +1,4 @@
-package nz.ac.uoa.g9.canvasplus;
+package nz.ac.uoa.g9.backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

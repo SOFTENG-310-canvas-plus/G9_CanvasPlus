@@ -1,4 +1,4 @@
-package nz.ac.uoa.g9.ai;
+package nz.ac.uoa.g9.backend.ai;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +32,7 @@ public class LLMController {
         String textIn = (prompt == null || prompt.isBlank()) ? "Say this is a test" : prompt;
 
         ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
-                .model(ChatModel.GPT_4_1_MINI) // GPT_4O_MINI etc. also fine
+                .model(ChatModel.GPT_5_NANO) // GPT_4O_MINI etc. also fine
                 .addUserMessage(textIn)         // helper provided by the SDK starter
                 .build();
 

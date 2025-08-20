@@ -142,8 +142,8 @@ export default function useGoogleCalendarEvents({ maxResults = 10, timeMin = new
 
   // Function to trigger interactive sign-in
   const signIn = async () => {
-    setLoading(true);
-    setError(null);
+    // setLoading(true);
+    // setError(null);
     try {
       // Ensure script is loaded
       if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {

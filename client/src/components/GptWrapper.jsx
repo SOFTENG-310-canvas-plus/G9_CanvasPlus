@@ -39,7 +39,7 @@ export function Form() {
         {/* Header */}
         <div className="pb-3 p-4">
           <div className="flex items-center gap-2">
-            <h4 className="text-lg font-semibold">City quiz</h4>
+            <h3 className="text-lg font-semibold">Ask Chat....</h3>
           </div>
           <p className="text-sm text-slate-600">
             What's on your mind today… Talk to the almighty GPT wrapper
@@ -53,11 +53,12 @@ export function Form() {
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask a city question or say 'quiz me'…"
+              placeholder="Ask me anything...."
               className=" min-h-24 resize-y border rounded-lg p-2"
-              style={{ fontSize: 18 }}
-              rows={3}
+              style={{ fontSize: 18, resize: 'none' }}
+              rows={3.5}
               cols={35}
+
             />
             <button
               type="submit"

@@ -10,7 +10,7 @@ export default function App() {
   const [widgets, setWidgets] = useState([
     { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2, color: "#1f2937" },
     { id: "calendar", title: "Calendar", col: 3, row: 0, w: 4, h: 3, color: "#0d9488" },
-    { id: "todo", title: "TODO List", col: 7, row: 0, w: 3, h: 4, color: "#f59e42" },
+    { id: "todo", title: "TODO List", col: 7, row: 0, w: 3, h: 4, color: "#4e4e4eff" },
     { id: "notes", title: "Notes", col: 0, row: 2, w: 3, h: 3, color: "#7c3aed" },
   ]);
 
@@ -113,6 +113,17 @@ function TodoWidget() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [courseFilter, setCourseFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("all");
+
+  // Assign a color to each course
+  const courseColors = {
+    "SOFTENG 310": "#f59e42",
+    "SOFTENG 306": "#60a5fa",
+    "SOFTENG 325": "#34d399",
+    "COMPSCI 367": "#a78bfa",
+    "(Custom)": "#e5e7eb"
+  };
 
   useEffect(() => {
     fetch("./src/mock_canvas_todos.json")
@@ -151,6 +162,24 @@ function TodoWidget() {
   if (loading) return <div>Loading tasks...</div>;
   if (error) return <div style={{ color: 'salmon' }}>Error: {error}</div>;
 
+  // Filtering logic
+  let filtered = [...todos];
+  if (courseFilter !== "all") {
+    filtered = filtered.filter(t => t.course === courseFilter);
+  }
+  if (timeFilter !== "all") {
+    const now = new Date();
+    let maxDate = null;
+    if (timeFilter === "7days") maxDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    if (timeFilter === "14days") maxDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    if (maxDate) {
+      filtered = filtered.filter(t => t.dueDate && new Date(t.dueDate) <= maxDate && new Date(t.dueDate) >= now);
+    }
+  }
+
+  // Unique course list for filter dropdown
+  const courseList = ["all", ...Array.from(new Set(todos.map(t => t.course)))];
+
   return (
     <div>
       <form onSubmit={addTodo} style={{ display: "flex", gap: 8, marginBottom: 12 }}>
@@ -162,8 +191,22 @@ function TodoWidget() {
         />
         <button type="submit" style={{ padding: "6px 12px", borderRadius: 6, background: "#f59e42", color: "#222", border: "none" }}>Add</button>
       </form>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)} style={{ padding: 6, borderRadius: 6 }}>
+          {courseList.map(c => (
+            <option key={c} value={c}>{c === "all" ? "All Courses" : c}</option>
+          ))}
+        </select>
+        <select value={timeFilter} onChange={e => setTimeFilter(e.target.value)} style={{ padding: 6, borderRadius: 6 }}>
+          <option value="all">All Dates</option>
+          <option value="7days">Next 7 Days</option>
+          <option value="14days">Next 14 Days</option>
+        </select>
+      </div>
+
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-        {[...todos]
+        {filtered
           .sort((a, b) => {
             if (!a.dueDate && !b.dueDate) return 0;
             if (!a.dueDate) return 1;
@@ -175,7 +218,7 @@ function TodoWidget() {
               display: "flex",
               alignItems: "flex-start",
               marginBottom: 10,
-              background: todo.done ? "#d1fae5" : "#fff",
+              background: todo.done ? "#d1fae5" : courseColors[todo.course] || "#fff",
               color: todo.done ? "#888" : "#222",
               borderRadius: 8,
               padding: 10,

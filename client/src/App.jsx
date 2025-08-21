@@ -107,18 +107,35 @@ export default function App() {
 }
 
 // --- Basic TODO List Widget ---
+import { useEffect } from "react";
 function TodoWidget() {
-  const [todos, setTodos] = useState([
-    { id: 1, text: "Sample task", done: false },
-  ]);
+  const [todos, setTodos] = useState([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch("./src/mock_canvas_todos.json")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load todos");
+        return res.json();
+      })
+      .then((data) => {
+        setTodos(data.map(t => ({ ...t, done: false })));
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
 
   const addTodo = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
     setTodos((prev) => [
       ...prev,
-      { id: Date.now(), text: input.trim(), done: false },
+      { id: Date.now(), title: input.trim(), course: "(Custom)", dueDate: null, done: false },
     ]);
     setInput("");
   };
@@ -130,6 +147,9 @@ function TodoWidget() {
   const deleteTodo = (id) => {
     setTodos((prev) => prev.filter(t => t.id !== id));
   };
+
+  if (loading) return <div>Loading tasks...</div>;
+  if (error) return <div style={{ color: 'salmon' }}>Error: {error}</div>;
 
   return (
     <div>
@@ -143,13 +163,48 @@ function TodoWidget() {
         <button type="submit" style={{ padding: "6px 12px", borderRadius: 6, background: "#f59e42", color: "#222", border: "none" }}>Add</button>
       </form>
       <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-        {todos.map(todo => (
-          <li key={todo.id} style={{ display: "flex", alignItems: "center", marginBottom: 6 }}>
-            <input type="checkbox" checked={todo.done} onChange={() => toggleTodo(todo.id)} />
-            <span style={{ marginLeft: 8, textDecoration: todo.done ? "line-through" : "none", flex: 1 }}>{todo.text}</span>
-            <button onClick={() => deleteTodo(todo.id)} style={{ marginLeft: 8, background: "none", border: "none", color: "#f87171", cursor: "pointer" }}>✕</button>
-          </li>
-        ))}
+        {[...todos]
+          .sort((a, b) => {
+            if (!a.dueDate && !b.dueDate) return 0;
+            if (!a.dueDate) return 1;
+            if (!b.dueDate) return -1;
+            return new Date(a.dueDate) - new Date(b.dueDate);
+          })
+          .map(todo => (
+            <li key={todo.id} style={{
+              display: "flex",
+              alignItems: "flex-start",
+              marginBottom: 10,
+              background: todo.done ? "#d1fae5" : "#fff",
+              color: todo.done ? "#888" : "#222",
+              borderRadius: 8,
+              padding: 10,
+              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+              position: "relative"
+            }}>
+              <input type="checkbox" checked={todo.done} onChange={() => toggleTodo(todo.id)} style={{ marginTop: 4 }} />
+              <div style={{ marginLeft: 12, flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontWeight: 600,
+                  fontSize: 15,
+                  marginBottom: 2,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  textDecoration: todo.done ? "line-through" : "none"
+                }} title={todo.title}>
+                  {todo.title}
+                </div>
+                <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 2 }}>{todo.course}</div>
+                {todo.dueDate && (
+                  <div style={{ fontSize: 12, opacity: 0.7 }}>
+                    Due: {new Date(todo.dueDate).toLocaleString()}
+                  </div>
+                )}
+              </div>
+              <button onClick={() => deleteTodo(todo.id)} style={{ marginLeft: 8, background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>✕</button>
+            </li>
+          ))}
       </ul>
     </div>
   );

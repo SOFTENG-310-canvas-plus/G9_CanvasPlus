@@ -6,12 +6,16 @@ import WidgetGrid, { Widget } from "./components/WidgetGrid.jsx";
 import useGoogleCalendarEvents from "./hooks/useGoogleCalendarEvents";
 import WeatherWidget from "./components/WeatherWidget.jsx"
 import CalendarWidget from "./components/CalendarWidget.jsx";
+import SearchWidget from "./components/SearchWidget.jsx"
+
 
 export default function App() {
   const [widgets, setWidgets] = useState([
     { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2, color: "#1f2937" },
     { id: "calendar", title: "Calendar", col: 3, row: 0, w: 4, h: 3, color: "#0d9488" },
     { id: "notes", title: "Notes", col: 0, row: 2, w: 3, h: 3, color: "#7c3aed" },
+    { id: "search", title: "Search", col: 7, row: 0, w: 4, h: 1, color: "#1f2937" },
+
   ]);
 
   const handleMove = useCallback((id, pos) => {
@@ -48,9 +52,8 @@ export default function App() {
               onMove={handleMove}
             >
               {w.id === "weather" && <WeatherWidget />}
-
               {w.id === "calendar" && <CalendarWidget /* maxResults={5} timeMin={new Date()} */ />}
-
+              {w.id === "search" && <SearchWidget />}
               {w.id === "notes" && (
                 <div>
                   <label style={{ display: "block", fontSize: 12, opacity: 0.7, marginBottom: 6 }}>

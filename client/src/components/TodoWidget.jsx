@@ -28,7 +28,7 @@ function TodoWidget() {
   };
 
   useEffect(() => {
-    fetch("./src/mock_canvas_todos.json")
+    fetch("/src/mock_canvas_todos.json")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load todos");
         return res.json();

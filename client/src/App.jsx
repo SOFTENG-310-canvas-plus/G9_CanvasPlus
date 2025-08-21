@@ -61,7 +61,7 @@ export default function App() {
             onMove={handleMove}
           >
             {w.id === "weather" && <WeatherWidget />}
-            {w.id === "search" && (<SearchWidget />)}
+            {w.id === "search" && <SearchWidget />}
             {w.id === "calendar" && (
               loading ? (
                 <div>Loading events...</div>

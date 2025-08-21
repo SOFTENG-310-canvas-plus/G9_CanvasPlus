@@ -3,8 +3,31 @@ import React from "react";
 import useGoogleCalendarEvents from "../hooks/useGoogleCalendarEvents";
 
 export default function CalendarWidget({ maxResults = 10, timeMin = new Date() }) {
-  const { events, loading, error, needsAuth, signIn } =
-    useGoogleCalendarEvents({ maxResults, timeMin });
+    const { events, loading, error, needsAuth, signIn } =
+        useGoogleCalendarEvents({ maxResults, timeMin });
+
+const formatStart = (ev) => {
+    const dt = ev.start?.dateTime;      // timed events
+    const d  = ev.start?.date;          // all-day events (YYYY-MM-DD)
+    if (dt) {
+        const date = new Date(dt);
+        return new Intl.DateTimeFormat(undefined, {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        }).format(date);
+    }
+    if (d) {
+        return new Intl.DateTimeFormat(undefined, {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+        }).format(new Date(d + "T00:00:00"));
+    }
+    return "(no date)";
+  };
 
   if (loading) return <div>Loading events...</div>;
 
@@ -26,8 +49,7 @@ export default function CalendarWidget({ maxResults = 10, timeMin = new Date() }
     <ul style={{ margin: 0, paddingLeft: 16 }}>
       {events.map((ev) => (
         <li key={ev.id}>
-          {ev.summary || "(no title)"} (
-          {ev.start?.dateTime?.slice(11, 16) || ev.start?.date})
+          [{formatStart(ev)}] | {ev.summary || "(no title)"}
         </li>
       ))}
     </ul>

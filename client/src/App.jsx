@@ -423,7 +423,7 @@ function TodoWidget() {
                   setHoldProgress(0);
                   let progress = 0;
                   holdInterval.current = setInterval(() => {
-                    progress += 100 / 20; // 2s, 20 steps
+                    progress += 100 / 9; // 1s, 9 steps
                     setHoldProgress(progress);
                   }, 100);
                   holdTimeout.current = setTimeout(() => {
@@ -431,7 +431,7 @@ function TodoWidget() {
                     setHoldProgress(100);
                     toggleTodo(todo.id);
                     setHoldId(null);
-                  }, 2000);
+                  }, 1000);
                 }}
                 onMouseUp={() => {
                   clearTimeout(holdTimeout.current);

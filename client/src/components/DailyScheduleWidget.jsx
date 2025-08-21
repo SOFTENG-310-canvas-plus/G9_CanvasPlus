@@ -1,6 +1,42 @@
+
 import React from "react";
 
+
 function DailyScheduleWidget() {
+  // Scroll to the next incomplete activity (not done, and in the future) on mount
+  // If none, scroll to the first incomplete activity. If none, scroll to top.
+  React.useEffect(() => {
+    if (!timelineRef.current) return;
+    // Find the next incomplete activity (not done, and start > now)
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    let next = null;
+    let firstIncomplete = null;
+    for (const act of activities) {
+      if (!act.done) {
+        if (firstIncomplete === null) firstIncomplete = act;
+        if (act.start > nowMinutes) {
+          next = act;
+          break;
+        }
+      }
+    }
+    const target = next || firstIncomplete;
+    if (target) {
+      // Scroll so that the activity is near the top (with a little offset)
+      const pxPerMinute = 1.8;
+      const timelineStart = 0;
+      const windowMinutes = 3 * 60;
+      const windowHeight = windowMinutes * pxPerMinute;
+      const y = (target.start - timelineStart) * pxPerMinute;
+      const scrollTop = Math.max(0, y - 30); // 30px offset from top
+      timelineRef.current.scrollTop = scrollTop;
+    } else {
+      timelineRef.current.scrollTop = 0;
+    }
+    // Only run on mount
+    // eslint-disable-next-line
+  }, []);
   const timelineRef = React.useRef(null);
   const [activities, setActivities] = React.useState([
     { id: 2, title: 'Wake up', start: 420, end: 435, done: false }, // 07:00 - 07:15

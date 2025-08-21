@@ -185,8 +185,7 @@ export default function useGoogleCalendarEvents({ maxResults = 10, timeMin = new
      * On success, caches the token and immediately refetches events.
      */
   const signIn = async () => {
-    // setLoading(true);
-    // setError(null);
+
     try {
         // Ensure the GIS SDK is available (in case user clicked quickly)
         if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {

@@ -166,7 +166,7 @@ export function Form() {
               className="w-full max-w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-base leading-relaxed shadow-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 disabled:opacity-60"
               disabled={loading}
             />
-            <div id="helper-text" className="text-xs text-slate-500">Press Enter to submit or keep typing to refine your prompt.</div>
+            <div id="helper-text" className="text-xs text-slate-500">Press submit or keep typing to refine your prompt.</div>
 
             <div className="flex items-center gap-3">
               {/* CHANGE: modern primary button with loading spinner */}

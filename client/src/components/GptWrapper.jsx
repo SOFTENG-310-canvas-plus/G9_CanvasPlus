@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import "../App.css"
 
 // CHANGE: Added helper to pretty-print JSON and copy to clipboard
 const stringifyPretty = (obj) => {

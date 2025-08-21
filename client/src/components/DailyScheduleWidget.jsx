@@ -1,15 +1,26 @@
 import React from "react";
 
 function DailyScheduleWidget() {
-  // Tick hold state for schedule
+  const timelineRef = React.useRef(null);
+  const [activities, setActivities] = React.useState([
+    { id: 2, title: 'Wake up', start: 420, end: 435, done: false }, // 07:00 - 07:15
+    { id: 3, title: 'Gym', start: 450, end: 510, done: false }, // 07:30 - 08:30
+    { id: 4, title: 'Cook', start: 540, end: 570, done: false }, // 09:00 - 09:30
+    { id: 5, title: 'Read', start: 600, end: 660, done: false }, // 10:00 - 11:00
+    { id: 6, title: 'Lunch', start: 720, end: 750, done: false }, // 12:00 - 12:30
+    { id: 7, title: 'Study', start: 780, end: 1020, done: false }, // 13:00 - 17:00
+    { id: 8, title: 'Dinner', start: 1080, end: 1110, done: false }, // 18:00 - 18:30
+    { id: 9, title: 'Relax', start: 1140, end: 1260, done: false }, // 19:00 - 21:00
+    { id: 10, title: 'Sleep', start: 1380, end: 1410, done: false }, // 23:00 - 23:30
+  ]);
+  const [showModal, setShowModal] = React.useState(false);
+  const [modalTitle, setModalTitle] = React.useState('');
+  const [modalTime, setModalTime] = React.useState('');
+  const [modalDuration, setModalDuration] = React.useState(30);
   const [holdId, setHoldId] = React.useState(null);
   const [holdProgress, setHoldProgress] = React.useState(0);
-  const holdTimeout = React.useRef();
-  const holdInterval = React.useRef();
-  // Handle tick (complete) for activity
-  function handleTickActivity(id) {
-    setActivities(prev => prev.map(a => a.id === id ? { ...a, done: !a.done } : a));
-  }
+  const holdInterval = React.useRef(null);
+  const holdTimeout = React.useRef(null);
 
   // --- Full 24-hour timeline, scrollable, with 4-hour window centered on now ---
   const now = new Date();
@@ -25,45 +36,6 @@ function DailyScheduleWidget() {
       y: t
     });
   }
-
-  // Activities: { id, title, start (minutes), end (minutes), done }
-  const [activities, setActivities] = React.useState([
-    { id: 2, title: 'Wake up', start: 420, end: 435, done: false }, // 07:00 - 07:15
-    { id: 3, title: 'Gym', start: 450, end: 510, done: false }, // 07:30 - 08:30
-    { id: 4, title: 'Cook', start: 540, end: 570, done: false }, // 09:00 - 09:30
-    { id: 5, title: 'Read', start: 600, end: 660, done: false }, // 10:00 - 11:00
-    { id: 6, title: 'Lunch', start: 720, end: 750, done: false }, // 12:00 - 12:30
-    { id: 7, title: 'Study', start: 780, end: 1020, done: false }, // 13:00 - 17:00
-    { id: 8, title: 'Dinner', start: 1080, end: 1110, done: false }, // 18:00 - 18:30
-    { id: 9, title: 'Relax', start: 1140, end: 1260, done: false }, // 19:00 - 21:00
-    { id: 10, title: 'Sleep', start: 1380, end: 1410, done: false }, // 23:00 - 23:30
-  ]);
-  const [showModal, setShowModal] = React.useState(false);
-  const [modalTitle, setModalTitle] = React.useState('');
-  const [modalTime, setModalTime] = React.useState('08:00');
-  const [modalDuration, setModalDuration] = React.useState(30);
-
-  // Add activity handler
-  function handleAddActivity(e) {
-    e.preventDefault();
-    const [h, m] = modalTime.split(':').map(Number);
-    const start = h * 60 + m;
-    setActivities(prev => [
-      ...prev,
-      {
-        id: Date.now(),
-        title: modalTitle,
-        start,
-        end: start + Number(modalDuration),
-        done: false
-      }
-    ]);
-    setShowModal(false);
-    setModalTitle('');
-    setModalTime('08:00');
-    setModalDuration(30);
-  }
-
   // Timeline height for 24 hours, window height for 4 hours
   // Make each hour slot bigger: 1.8px per minute (108px per hour)
   const pxPerMinute = 1.8;
@@ -75,15 +47,34 @@ function DailyScheduleWidget() {
   function timeToY(minutes) {
     return (minutes - timelineStart) * pxPerMinute;
   }
-  // Ref for scrolling
-  const timelineRef = React.useRef(null);
-  React.useEffect(() => {
-    if (timelineRef.current) {
-      // Scroll so that 'now' is centered in the window
-      const scrollTo = timeToY(nowMinutes) - windowHeight / 2;
-      timelineRef.current.scrollTop = Math.max(0, scrollTo);
-    }
-  }, []);
+
+  const handleTickActivity = (id) => {
+    setActivities((acts) => acts.map(act => {
+      if (act.id === id) {
+        return { ...act, done: !act.done };
+      }
+      return act;
+    }));
+  };
+
+  const handleAddActivity = (e) => {
+    e.preventDefault();
+    const startTime = modalTime.split(':');
+    const start = parseInt(startTime[0]) * 60 + parseInt(startTime[1]);
+    const end = start + parseInt(modalDuration);
+    const newActivity = {
+      id: Math.random(), // temporary ID, replace with proper ID generation
+      title: modalTitle,
+      start,
+      end,
+      done: false
+    };
+    setActivities(acts => [...acts, newActivity]);
+    setShowModal(false);
+    setModalTitle('');
+    setModalTime('');
+    setModalDuration(30);
+  };
 
   return (
     <div style={{ position: 'relative', height: windowHeight + 60, width: timelineWidth + 60, padding: 0, background: '#f9fafb', borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden', border: '1.5px solid #e0e7ef' }}>
@@ -134,16 +125,18 @@ function DailyScheduleWidget() {
           {/* Now line */}
           <div style={{ position: 'absolute', left: 0, right: 0, top: timeToY(nowMinutes), height: 2, background: '#f87171', zIndex: 2, opacity: 0.7 }} />
           {/* Activities as blocks */}
-          {activities.map(act => (
-            act.start >= timelineStart && act.start < timelineEnd && (
+          {activities.map(act => {
+            const isLate = !act.done && nowMinutes > act.start + 10;
+            if (!(act.start >= timelineStart && act.start < timelineEnd)) return null;
+            return (
               <div key={act.id} style={{
                 position: 'absolute',
                 left: 28,
                 top: timeToY(act.start),
-                height: Math.max(44, timeToY(act.end) - timeToY(act.start)), // min 44px for tick
+                height: Math.max(44, timeToY(act.end) - timeToY(act.start)),
                 width: timelineWidth - 80,
-                background: act.done ? '#e0f2fe' : '#fbbf24',
-                color: act.done ? '#888' : '#222',
+                background: act.done ? '#e0f2fe' : isLate ? '#fecaca' : '#fbbf24',
+                color: act.done ? '#888' : isLate ? '#b91c1c' : '#222',
                 borderRadius: 7,
                 boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                 display: 'flex',
@@ -151,9 +144,9 @@ function DailyScheduleWidget() {
                 padding: '0 8px',
                 fontWeight: 500,
                 fontSize: 13,
-                zIndex: 2
+                zIndex: 2,
+                border: isLate ? '2px solid #ef4444' : undefined
               }} title={act.title}>
-                {/* Tick button */}
                 <button
                   type="button"
                   aria-label={act.done ? "Completed" : "Mark as done"}
@@ -163,7 +156,7 @@ function DailyScheduleWidget() {
                     setHoldProgress(0);
                     let progress = 0;
                     holdInterval.current = setInterval(() => {
-                      progress += 100 / 9; // 1s, 9 steps
+                      progress += 100 / 9;
                       setHoldProgress(progress);
                     }, 100);
                     holdTimeout.current = setTimeout(() => {
@@ -207,11 +200,9 @@ function DailyScheduleWidget() {
                   }}
                   disabled={act.done}
                 >
-                  {/* Green Tick icon SVG */}
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={act.done ? '#fff' : '#22c55e'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: act.done ? 1 : 0.8, display: 'block' }}>
                     <polyline points="5 11 9 15 15 7" />
                   </svg>
-                  {/* Progress ring */}
                   {holdId === act.id && !act.done && (
                     <svg width="40" height="40" style={{ position: 'absolute', top: -4, left: -4, pointerEvents: 'none', zIndex: 1 }}>
                       <circle
@@ -232,13 +223,26 @@ function DailyScheduleWidget() {
                 </button>
                 <span style={{ fontWeight: 700, marginRight: 8 }}>
                   {act.title}
+                  {isLate && (
+                    <span style={{
+                      color: '#b91c1c',
+                      background: '#fee2e2',
+                      borderRadius: 5,
+                      fontWeight: 800,
+                      fontSize: 11,
+                      marginLeft: 8,
+                      padding: '2px 7px',
+                      letterSpacing: 0.5,
+                      verticalAlign: 'middle',
+                    }}>Late</span>
+                  )}
                 </span>
                 <span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.8 }}>
                   {`${String(Math.floor(act.start / 60)).padStart(2, '0')}:${String(act.start % 60).padStart(2, '0')}`} - {`${String(Math.floor(act.end / 60)).padStart(2, '0')}:${String(act.end % 60).padStart(2, '0')}`}
                 </span>
               </div>
-            )
-          ))}
+            );
+          })}
         </div>
       </div>
       {/* Modal for adding activity */}

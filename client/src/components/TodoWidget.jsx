@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 
 function TodoWidget() {
@@ -103,57 +102,42 @@ function TodoWidget() {
   if (error) return <div style={{ color: 'salmon' }}>Error: {error}</div>;
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
-        <button onClick={() => setShowModal(true)} style={{
-          padding: '10px 18px',
-          borderRadius: 8,
-          background: '#22223b',
-          color: '#fff',
-          border: 'none',
-          fontWeight: 600,
-          fontSize: 15,
-          letterSpacing: 0.2,
-          cursor: 'pointer',
-          transition: 'background 0.2s',
-          minWidth: 80,
-        }}>Add</button>
-      </div>
-      <div style={{
-        display: 'flex',
-        gap: 28,
-        marginBottom: 18,
-        background: '#f3f4f6',
-        borderRadius: 10,
-        padding: '6px 18px 6px 14px',
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        whiteSpace: 'nowrap',
-        scrollbarWidth: 'thin',
-        maxWidth: '100%',
-        alignItems: 'center',
-        minHeight: 36,
-      }}>
-        <div style={{ position: 'relative', display: 'inline-block', minWidth: 140, maxWidth: 260, verticalAlign: 'middle', marginRight: 0 }}>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px' }}>
+      {/* Responsive controls: Add button on top if not enough space */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+          <button onClick={() => setShowModal(true)} style={{
+            background: '#22223b',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 7,
+            padding: '6px 16px',
+            fontWeight: 600,
+            fontSize: 13,
+            cursor: 'pointer',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          }}>Add</button>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)}
             style={{
-              minWidth: 140,
-              maxWidth: 260,
-              width: 'auto',
-              padding: '12px 38px 12px 18px',
-              borderRadius: 8,
-              border: '1.5px solid #cbd5e1',
+              fontSize: 13,
+              minWidth: 110,
+              maxWidth: 180,
+              padding: '4px 8px',
+              borderRadius: 5,
+              border: '1.5px solid #e5e7eb',
+              appearance: 'auto',
+              WebkitAppearance: 'auto',
+              MozAppearance: 'auto',
               background: '#f9fafb',
-              fontSize: 15,
               color: '#22223b',
               outline: 'none',
               cursor: 'pointer',
-              appearance: 'none',
-              WebkitAppearance: 'none',
-              MozAppearance: 'none',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
               transition: 'border 0.2s, box-shadow 0.2s',
-              whiteSpace: 'normal',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
             onFocus={e => e.target.style.border = '1.5px solid #6366f1'}
             onBlur={e => e.target.style.border = '1.5px solid #cbd5e1'}
@@ -162,38 +146,25 @@ function TodoWidget() {
               <option key={c} value={c}>{c === "all" ? "All Courses" : c}</option>
             ))}
           </select>
-          <span style={{
-            pointerEvents: 'none',
-            position: 'absolute',
-            right: 14,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            alignItems: 'center',
-            color: '#6b7280',
-            fontSize: 15
-          }}>▼</span>
-        </div>
-        <div style={{ position: 'relative', display: 'inline-block', minWidth: 140, maxWidth: 260, verticalAlign: 'middle', marginRight: 0 }}>
           <select value={timeFilter} onChange={e => setTimeFilter(e.target.value)}
             style={{
-              minWidth: 140,
-              maxWidth: 260,
-              width: 'auto',
-              padding: '12px 38px 12px 18px',
-              borderRadius: 8,
-              border: '1.5px solid #cbd5e1',
+              fontSize: 13,
+              minWidth: 110,
+              maxWidth: 180,
+              padding: '4px 8px',
+              borderRadius: 5,
+              border: '1.5px solid #e5e7eb',
+              appearance: 'auto',
+              WebkitAppearance: 'auto',
+              MozAppearance: 'auto',
               background: '#f9fafb',
-              fontSize: 15,
               color: '#22223b',
               outline: 'none',
               cursor: 'pointer',
-              appearance: 'none',
-              WebkitAppearance: 'none',
-              MozAppearance: 'none',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
               transition: 'border 0.2s, box-shadow 0.2s',
-              whiteSpace: 'normal',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
             onFocus={e => e.target.style.border = '1.5px solid #6366f1'}
             onBlur={e => e.target.style.border = '1.5px solid #cbd5e1'}
@@ -203,19 +174,7 @@ function TodoWidget() {
             <option value="7days">Next 7 Days</option>
             <option value="14days">Next 14 Days</option>
           </select>
-          <span style={{
-            pointerEvents: 'none',
-            position: 'absolute',
-            right: 14,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            alignItems: 'center',
-            color: '#6b7280',
-            fontSize: 15
-          }}>▼</span>
         </div>
-        {/* Show Completed checkbox moved to top bar */}
       </div>
 
       {/* Modal for adding a new todo */}
@@ -273,153 +232,162 @@ function TodoWidget() {
         </div>
       )}
 
-      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-        {filtered
-          .sort((a, b) => {
-            if (!a.dueDate && !b.dueDate) return 0;
-            if (!a.dueDate) return 1;
-            if (!b.dueDate) return -1;
-            return new Date(a.dueDate) - new Date(b.dueDate);
-          })
-          .map(todo => {
-            return (
-              <li
-                key={todo.id}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  marginBottom: 12,
-                  background: todo.done ? "#e0f2fe" : courseColors[todo.course] || "#fff",
-                  color: todo.done ? "#888" : "#222",
-                  borderRadius: 10,
-                  padding: 12,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                  position: "relative",
-                  transition: "background 0.2s, opacity 0.35s, transform 0.35s",
-                  opacity: fadingIds.includes(todo.id) ? 0 : 1,
-                  transform: fadingIds.includes(todo.id) ? 'translateY(30px)' : 'translateY(0)',
-                  pointerEvents: fadingIds.includes(todo.id) ? 'none' : 'auto',
-                }}
-              >
-                <button
-                  type="button"
-                  aria-label={todo.done ? "Completed" : "Mark as done"}
-                  onMouseDown={() => {
-                    if (todo.done) return;
-                    setHoldId(todo.id);
-                    setHoldProgress(0);
-                    let progress = 0;
-                    holdInterval.current = setInterval(() => {
-                      progress += 100 / 9; // 1s, 9 steps
-                      setHoldProgress(progress);
-                    }, 100);
-                    holdTimeout.current = setTimeout(() => {
-                      clearInterval(holdInterval.current);
-                      setHoldProgress(100);
-                      toggleTodo(todo.id);
-                      setHoldId(null);
-                    }, 1000);
-                  }}
-                  onMouseUp={() => {
-                    clearTimeout(holdTimeout.current);
-                    clearInterval(holdInterval.current);
-                    setHoldProgress(0);
-                    setHoldId(null);
-                  }}
-                  onMouseLeave={() => {
-                    clearTimeout(holdTimeout.current);
-                    clearInterval(holdInterval.current);
-                    setHoldProgress(0);
-                    setHoldId(null);
-                  }}
+      <div style={{
+        maxHeight: 'calc(100vh - 200px)',
+        overflowY: 'auto',
+        paddingRight: 8,
+        scrollbarWidth: 'thin',
+        position: 'relative',
+        WebkitOverflowScrolling: 'touch',
+      }}>
+        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+          {filtered
+            .sort((a, b) => {
+              if (!a.dueDate && !b.dueDate) return 0;
+              if (!a.dueDate) return 1;
+              if (!b.dueDate) return -1;
+              return new Date(a.dueDate) - new Date(b.dueDate);
+            })
+            .map(todo => {
+              return (
+                <li
+                  key={todo.id}
                   style={{
-                    width: 36,
-                    height: 36,
-                    minWidth: 36,
-                    minHeight: 36,
-                    borderRadius: '50%',
-                    border: todo.done ? '2.5px solid #22c55e' : '2.5px solid #cbd5e1',
-                    background: todo.done ? '#22c55e' : '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: todo.done ? 'default' : 'pointer',
-                    marginTop: 2,
-                    marginRight: 12,
-                    position: 'relative',
-                    outline: 'none',
-                    transition: 'background 0.2s, border 0.2s',
-                    boxShadow: undefined,
-                    padding: 0,
-                    overflow: 'visible',
-                  }}
-                  disabled={todo.done}
-                >
-                  {/* Green Tick icon SVG */}
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={todo.done ? '#fff' : '#22c55e'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: todo.done ? 1 : 0.8, display: 'block' }}>
-                    <polyline points="5 11 9 15 15 7" />
-                  </svg>
-                  {/* Progress ring */}
-                  {holdId === todo.id && !todo.done && (
-                    <svg width="40" height="40" style={{ position: 'absolute', top: -4, left: -4, pointerEvents: 'none', zIndex: 1 }}>
-                      <circle
-                        cx="20" cy="20" r="17"
-                        stroke="#22c55e"
-                        strokeWidth="3.5"
-                        fill="none"
-                        strokeDasharray={2 * Math.PI * 17}
-                        strokeDashoffset={2 * Math.PI * 17 * (1 - holdProgress / 100)}
-                        style={{
-                          transition: 'stroke-dashoffset 0.1s linear',
-                          transform: 'rotate(-90deg)',
-                          transformOrigin: '50% 50%'
-                        }}
-                      />
-                    </svg>
-                  )}
-                </button>
-                <div style={{ marginLeft: 4, flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontWeight: 600,
-                    fontSize: 16,
-                    marginBottom: 2,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    textDecoration: todo.done ? "line-through" : "none",
-                    transition: 'text-decoration 0.2s',
-                  }} title={todo.title}>
-                    {todo.title}
-                  </div>
-                  <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 2 }}>{todo.course}</div>
-                  {todo.dueDate && (
-                    <div style={{ fontSize: 12, opacity: 0.7 }}>
-                      Due: {new Date(todo.dueDate).toLocaleString()}
-                    </div>
-                  )}
-                </div>
-                {todo.source !== 'canvas' && (
-                  <button onClick={() => deleteTodo(todo.id)} style={{
-                    marginLeft: 10,
-                    background: "#fff",
-                    border: "1.5px solid #f87171",
-                    color: "#f87171",
-                    borderRadius: 8,
-                    fontSize: 16,
-                    fontWeight: 600,
-                    width: 32,
-                    height: 32,
                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    transition: "background 0.2s, color 0.2s, border 0.2s"
-                  }} title="Delete task">✕</button>
-                )}
-              </li>
-            );
-          })}
-      </ul>
+                    alignItems: "flex-start",
+                    marginBottom: 12,
+                    background: todo.done ? "#e0f2fe" : courseColors[todo.course] || "#fff",
+                    color: todo.done ? "#888" : "#222",
+                    borderRadius: 10,
+                    padding: 12,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                    position: "relative",
+                    transition: "background 0.2s, opacity 0.35s, transform 0.35s",
+                    opacity: fadingIds.includes(todo.id) ? 0 : 1,
+                    transform: fadingIds.includes(todo.id) ? 'translateY(30px)' : 'translateY(0)',
+                    pointerEvents: fadingIds.includes(todo.id) ? 'none' : 'auto',
+                  }}
+                >
+                  <button
+                    type="button"
+                    aria-label={todo.done ? "Completed" : "Mark as done"}
+                    onMouseDown={() => {
+                      if (todo.done) return;
+                      setHoldId(todo.id);
+                      setHoldProgress(0);
+                      let progress = 0;
+                      holdInterval.current = setInterval(() => {
+                        progress += 100 / 9; // 1s, 9 steps
+                        setHoldProgress(progress);
+                      }, 100);
+                      holdTimeout.current = setTimeout(() => {
+                        clearInterval(holdInterval.current);
+                        setHoldProgress(100);
+                        toggleTodo(todo.id);
+                        setHoldId(null);
+                      }, 1000);
+                    }}
+                    onMouseUp={() => {
+                      clearTimeout(holdTimeout.current);
+                      clearInterval(holdInterval.current);
+                      setHoldProgress(0);
+                      setHoldId(null);
+                    }}
+                    onMouseLeave={() => {
+                      clearTimeout(holdTimeout.current);
+                      clearInterval(holdInterval.current);
+                      setHoldProgress(0);
+                      setHoldId(null);
+                    }}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      minWidth: 36,
+                      minHeight: 36,
+                      borderRadius: '50%',
+                      border: todo.done ? '2.5px solid #22c55e' : '2.5px solid #cbd5e1',
+                      background: todo.done ? '#22c55e' : '#fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: todo.done ? 'default' : 'pointer',
+                      marginTop: 2,
+                      marginRight: 12,
+                      position: 'relative',
+                      outline: 'none',
+                      transition: 'background 0.2s, border 0.2s',
+                      boxShadow: undefined,
+                      padding: 0,
+                      overflow: 'visible',
+                    }}
+                    disabled={todo.done}
+                  >
+                    {/* Green Tick icon SVG */}
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={todo.done ? '#fff' : '#22c55e'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: todo.done ? 1 : 0.8, display: 'block' }}>
+                      <polyline points="5 11 9 15 15 7" />
+                    </svg>
+                    {/* Progress ring */}
+                    {holdId === todo.id && !todo.done && (
+                      <svg width="40" height="40" style={{ position: 'absolute', top: -4, left: -4, pointerEvents: 'none', zIndex: 1 }}>
+                        <circle
+                          cx="20" cy="20" r="17"
+                          stroke="#22c55e"
+                          strokeWidth="3.5"
+                          fill="none"
+                          strokeDasharray={2 * Math.PI * 17}
+                          strokeDashoffset={2 * Math.PI * 17 * (1 - holdProgress / 100)}
+                          style={{
+                            transition: 'stroke-dashoffset 0.1s linear',
+                            transform: 'rotate(-90deg)',
+                            transformOrigin: '50% 50%'
+                          }}
+                        />
+                      </svg>
+                    )}
+                  </button>
+                  <div style={{ marginLeft: 4, flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontWeight: 600,
+                      fontSize: 16,
+                      marginBottom: 2,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      textDecoration: todo.done ? "line-through" : "none",
+                      transition: 'text-decoration 0.2s',
+                    }} title={todo.title}>
+                      {todo.title}
+                    </div>
+                    <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 2 }}>{todo.course}</div>
+                    {todo.dueDate && (
+                      <div style={{ fontSize: 12, opacity: 0.7 }}>
+                        Due: {new Date(todo.dueDate).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                  {todo.source !== 'canvas' && (
+                    <button onClick={() => deleteTodo(todo.id)} style={{
+                      marginLeft: 10,
+                      background: "#fff",
+                      border: "1.5px solid #f87171",
+                      color: "#f87171",
+                      borderRadius: 8,
+                      fontSize: 16,
+                      fontWeight: 600,
+                      width: 32,
+                      height: 32,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      transition: "background 0.2s, color 0.2s, border 0.2s"
+                    }} title="Delete task">✕</button>
+                  )}
+                </li>
+              );
+            })}
+        </ul>
+      </div>
     </div>
   );
 }

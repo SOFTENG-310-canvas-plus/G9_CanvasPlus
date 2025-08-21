@@ -39,7 +39,6 @@ export default function App() {
         fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial",
       }}
     >
-
       <WidgetGrid cols={17} rows={8} cellW={96} rowH={96} gap={16} showGrid>
         {widgets.map((w) => (
           <Widget
@@ -54,71 +53,56 @@ export default function App() {
             onMove={handleMove}
           >
             {w.id === "weather" && <WeatherWidget />}
+            {w.id === "search" && <SearchWidget />}
             {w.id === "clock" && <ClockWidget />}
 
+            {w.id === "calendar" && (
+              (loading)
+                ? <div>Loading events...</div>
+                : needsAuth
+                  ? (
+                    <div>
+                      <div style={{ marginBottom: 8 }}>Sign in to view your calendar events.</div>
+                      <button onClick={signIn} style={{ padding: '8px 12px', borderRadius: 6 }}>Sign in with Google</button>
+                    </div>
+                  )
+                  : error
+                    ? <div style={{ color: 'salmon' }}>Error: {error}</div>
+                    : (!events || events.length === 0)
+                      ? <div>No upcoming events</div>
+                      : (
+                        <ul style={{ margin: 0, paddingLeft: 16 }}>
+                          {events.map(ev => (
+                            <li key={ev.id}>{ev.summary || '(no title)'} ({ev.start?.dateTime?.slice(11, 16) || ev.start?.date})</li>
+                          ))}
+                        </ul>
+                      )
+            )}
 
-        <WidgetGrid cols={17} rows={8} cellW={96} rowH={96} gap={16} showGrid>
-          {widgets.map((w) => (
-            <Widget
-              key={w.id}
-              id={w.id}
-              title={w.title}
-              col={w.col}
-              row={w.row}
-              w={w.w}
-              h={w.h}
-              color={w.color}
-              onMove={handleMove}
-            >
-              {w.id === "weather" && <WeatherWidget />}
-                {w.id === "search" && <SearchWidget />}
-              {w.id === "calendar" && (
-                (loading)
-                  ? <div>Loading events...</div>
-                  : needsAuth
-                    ? (
-                      <div>
-                        <div style={{ marginBottom: 8 }}>Sign in to view your calendar events.</div>
-                        <button onClick={signIn} style={{ padding: '8px 12px', borderRadius: 6 }}>Sign in with Google</button>
-                      </div>
-                    )
-                    : error
-                      ? <div style={{ color: 'salmon' }}>Error: {error}</div>
-                      : (!events || events.length === 0)
-                        ? <div>No upcoming events</div>
-                        : (
-                          <ul style={{ margin: 0, paddingLeft: 16 }}>
-                            {events.map(ev => (
-                              <li key={ev.id}>{ev.summary || '(no title)'} ({ev.start?.dateTime?.slice(11,16) || ev.start?.date})</li>
-                            ))}
-                          </ul>
-                        )
-              )}
-
-              {w.id === "notes" && (
-                <div>
-                  <label style={{ display: "block", fontSize: 12, opacity: 0.7, marginBottom: 6 }}>
-                    Quick note
-                  </label>
-                  <textarea
-                    rows={6}
-                    placeholder="Type here…"
-                    style={{
-                      width: "100%",
-                      padding: 8,
-                      borderRadius: 8,
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      background: "rgba(255,255,255,0.06)",
-                      color: "white",
-                      outline: "none",
-                      resize: "vertical",
-                    }}
-                  />
-                </div>
-              )}
-            </Widget>
-          ))}
-        </WidgetGrid>
-      </div>
+            {w.id === "notes" && (
+              <div>
+                <label style={{ display: "block", fontSize: 12, opacity: 0.7, marginBottom: 6 }}>
+                  Quick note
+                </label>
+                <textarea
+                  rows={6}
+                  placeholder="Type here…"
+                  style={{
+                    width: "100%",
+                    padding: 8,
+                    borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(255,255,255,0.06)",
+                    color: "white",
+                    outline: "none",
+                    resize: "vertical",
+                  }}
+                />
+              </div>
+            )}
+          </Widget>
+        ))}
+      </WidgetGrid>
+    </div >
   );
 }

@@ -7,6 +7,7 @@ import WidgetGrid, { Widget } from "./components/WidgetGrid.jsx";
 import useGoogleCalendarEvents from "./hooks/useGoogleCalendarEvents";
 import WeatherWidget from "./components/WeatherWidget.jsx";
 import DailyScheduleWidget from "./components/DailyScheduleWidget.jsx";
+import SearchWidget from "./components/SearchWidget.jsx";
 import TodoWidget from "./components/TodoWidget.jsx";
 
 export default function App() {
@@ -16,6 +17,8 @@ export default function App() {
     { id: "todo", title: "TODO List", col: 7, row: 0, w: 3, h: 4, color: "#4e4e4eff" },
     { id: "schedule", title: "Daily Schedule", col: 10, row: 0, w: 4, h: 4.2, color: "#fbbf24" },
     { id: "notes", title: "Notes", col: 0, row: 2, w: 3, h: 3, color: "#7c3aed" },
+    { id: "search", title: "Search", col: 7, row: 0, w: 4, h: 1, color: "#1f2937" },
+
   ]);
 
   const handleMove = useCallback((id, pos) => {
@@ -58,7 +61,7 @@ export default function App() {
             onMove={handleMove}
           >
             {w.id === "weather" && <WeatherWidget />}
-
+            {w.id === "search" && (<SearchWidget />)}
             {w.id === "calendar" && (
               loading ? (
                 <div>Loading events...</div>

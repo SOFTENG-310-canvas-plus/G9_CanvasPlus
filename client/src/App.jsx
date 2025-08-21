@@ -108,6 +108,12 @@ export default function App() {
 // --- Basic TODO List Widget ---
 import { useEffect } from "react";
 function TodoWidget() {
+  // For hold-to-complete
+  const [holdId, setHoldId] = useState(null);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdTimeout = React.useRef();
+  const holdInterval = React.useRef();
+  const [fadingIds, setFadingIds] = useState([]);
   const [todos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -179,7 +185,20 @@ function TodoWidget() {
   const addCategoryList = Array.from(new Set(todos.map(t => t.course).concat(customCategories)));
 
   const toggleTodo = (id) => {
-    setTodos((prev) => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
+    // If already fading, ignore
+    if (fadingIds.includes(id)) return;
+    // If marking as done, fade out first
+    const todo = todos.find(t => t.id === id);
+    if (todo && !todo.done) {
+      setFadingIds(f => [...f, id]);
+      setTimeout(() => {
+        setTodos((prev) => prev.map(t => t.id === id ? { ...t, done: true } : t));
+        setFadingIds(f => f.filter(fid => fid !== id));
+      }, 350); // match CSS transition duration
+    } else {
+      // If unchecking, just update immediately
+      setTodos((prev) => prev.map(t => t.id === id ? { ...t, done: false } : t));
+    }
   };
 
   // Only allow deleting custom todos (source !== 'canvas')
@@ -377,28 +396,102 @@ function TodoWidget() {
             return new Date(a.dueDate) - new Date(b.dueDate);
           })
           .map(todo => (
-            <li key={todo.id} style={{
-              display: "flex",
-              alignItems: "flex-start",
-              marginBottom: 12,
-              background: todo.done ? "#e0f2fe" : courseColors[todo.course] || "#fff",
-              color: todo.done ? "#888" : "#222",
-              borderRadius: 10,
-              padding: 12,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-              position: "relative",
-              transition: "background 0.2s"
-            }}>
-              <input type="checkbox" checked={todo.done} onChange={() => toggleTodo(todo.id)} style={{
-                marginTop: 4,
-                accentColor: todo.done ? "#38bdf8" : courseColors[todo.course] || "#22223b",
-                width: 18,
-                height: 18,
-                borderRadius: 6,
-                border: "1.5px solid #cbd5e1",
-                cursor: "pointer"
-              }} />
-              <div style={{ marginLeft: 14, flex: 1, minWidth: 0 }}>
+            <li
+              key={todo.id}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                marginBottom: 12,
+                background: todo.done ? "#e0f2fe" : courseColors[todo.course] || "#fff",
+                color: todo.done ? "#888" : "#222",
+                borderRadius: 10,
+                padding: 12,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                position: "relative",
+                transition: "background 0.2s, opacity 0.35s, transform 0.35s",
+                opacity: fadingIds.includes(todo.id) ? 0 : 1,
+                transform: fadingIds.includes(todo.id) ? 'translateY(30px)' : 'translateY(0)',
+                pointerEvents: fadingIds.includes(todo.id) ? 'none' : 'auto',
+              }}
+            >
+              <button
+                type="button"
+                aria-label={todo.done ? "Completed" : "Mark as done"}
+                onMouseDown={() => {
+                  if (todo.done) return;
+                  setHoldId(todo.id);
+                  setHoldProgress(0);
+                  let progress = 0;
+                  holdInterval.current = setInterval(() => {
+                    progress += 100 / 20; // 2s, 20 steps
+                    setHoldProgress(progress);
+                  }, 100);
+                  holdTimeout.current = setTimeout(() => {
+                    clearInterval(holdInterval.current);
+                    setHoldProgress(100);
+                    toggleTodo(todo.id);
+                    setHoldId(null);
+                  }, 2000);
+                }}
+                onMouseUp={() => {
+                  clearTimeout(holdTimeout.current);
+                  clearInterval(holdInterval.current);
+                  setHoldProgress(0);
+                  setHoldId(null);
+                }}
+                onMouseLeave={() => {
+                  clearTimeout(holdTimeout.current);
+                  clearInterval(holdInterval.current);
+                  setHoldProgress(0);
+                  setHoldId(null);
+                }}
+                style={{
+                  width: 36,
+                  height: 36,
+                  minWidth: 36,
+                  minHeight: 36,
+                  borderRadius: '50%',
+                  border: todo.done ? '2.5px solid #22c55e' : '2.5px solid #cbd5e1',
+                  background: todo.done ? '#22c55e' : '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: todo.done ? 'default' : 'pointer',
+                  marginTop: 2,
+                  marginRight: 12,
+                  position: 'relative',
+                  outline: 'none',
+                  transition: 'background 0.2s, border 0.2s',
+                  boxShadow: undefined,
+                  padding: 0,
+                  overflow: 'visible',
+                }}
+                disabled={todo.done}
+              >
+                {/* Green Tick icon SVG */}
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={todo.done ? '#fff' : '#22c55e'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: todo.done ? 1 : 0.8, display: 'block' }}>
+                  <polyline points="5 11 9 15 15 7" />
+                </svg>
+                {/* Progress ring */}
+                {holdId === todo.id && !todo.done && (
+                  <svg width="40" height="40" style={{ position: 'absolute', top: -4, left: -4, pointerEvents: 'none', zIndex: 1 }}>
+                    <circle
+                      cx="20" cy="20" r="17"
+                      stroke="#22c55e"
+                      strokeWidth="3.5"
+                      fill="none"
+                      strokeDasharray={2 * Math.PI * 17}
+                      strokeDashoffset={2 * Math.PI * 17 * (1 - holdProgress / 100)}
+                      style={{
+                        transition: 'stroke-dashoffset 0.1s linear',
+                        transform: 'rotate(-90deg)',
+                        transformOrigin: '50% 50%'
+                      }}
+                    />
+                  </svg>
+                )}
+              </button>
+              <div style={{ marginLeft: 4, flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontWeight: 600,
                   fontSize: 16,
@@ -406,7 +499,8 @@ function TodoWidget() {
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  textDecoration: todo.done ? "line-through" : "none"
+                  textDecoration: todo.done ? "line-through" : "none",
+                  transition: 'text-decoration 0.2s',
                 }} title={todo.title}>
                   {todo.title}
                 </div>

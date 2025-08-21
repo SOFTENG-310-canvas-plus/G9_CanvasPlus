@@ -28,7 +28,6 @@ function DailyScheduleWidget() {
 
   // Activities: { id, title, start (minutes), end (minutes), done }
   const [activities, setActivities] = React.useState([
-    { id: 1, title: 'Sleep', start: 0, end: 420, done: false }, // 00:00 - 07:00
     { id: 2, title: 'Wake up', start: 420, end: 435, done: false }, // 07:00 - 07:15
     { id: 3, title: 'Gym', start: 450, end: 510, done: false }, // 07:30 - 08:30
     { id: 4, title: 'Cook', start: 540, end: 570, done: false }, // 09:00 - 09:30
@@ -37,7 +36,7 @@ function DailyScheduleWidget() {
     { id: 7, title: 'Study', start: 780, end: 1020, done: false }, // 13:00 - 17:00
     { id: 8, title: 'Dinner', start: 1080, end: 1110, done: false }, // 18:00 - 18:30
     { id: 9, title: 'Relax', start: 1140, end: 1260, done: false }, // 19:00 - 21:00
-    { id: 10, title: 'Sleep', start: 1320, end: 1440, done: false }, // 22:00 - 24:00
+    { id: 10, title: 'Sleep', start: 1380, end: 1410, done: false }, // 23:00 - 23:30
   ]);
   const [showModal, setShowModal] = React.useState(false);
   const [modalTitle, setModalTitle] = React.useState('');
@@ -69,8 +68,8 @@ function DailyScheduleWidget() {
   // Make each hour slot bigger: 1.8px per minute (108px per hour)
   const pxPerMinute = 1.8;
   const timelineHeight = 24 * 60 * pxPerMinute; // 2592px
-  const windowMinutes = 5 * 60;
-  const windowHeight = windowMinutes * pxPerMinute; // 540px
+  const windowMinutes = 3 * 60;
+  const windowHeight = windowMinutes * pxPerMinute; // 324px
   const timelineWidth = 320;
   const totalMinutes = timelineEnd - timelineStart;
   function timeToY(minutes) {
@@ -89,18 +88,18 @@ function DailyScheduleWidget() {
   return (
     <div style={{ position: 'relative', height: windowHeight + 60, width: timelineWidth + 60, padding: 0, background: '#f9fafb', borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden', border: '1.5px solid #e0e7ef' }}>
       {/* Add Activity Button */}
-      <div style={{ padding: '12px 14px 0 14px', display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ padding: '12px 14px 10px 14px', display: 'flex', justifyContent: 'flex-end' }}>
         <button onClick={() => setShowModal(true)} style={{ background: '#22223b', color: '#fff', border: 'none', borderRadius: 7, padding: '6px 16px', fontWeight: 600, fontSize: 13, cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>Add Activity</button>
       </div>
       {/* Timeline container with grid, scrollable, flex layout for time labels */}
-      <div ref={timelineRef} style={{ display: 'flex', flexDirection: 'row', margin: '0 14px 14px 0', height: windowHeight, width: timelineWidth + 80, borderRadius: 7, overflowY: 'auto', background: '#fff' }}>
+      <div ref={timelineRef} style={{ display: 'flex', flexDirection: 'row', margin: '0px 14px 14px 0', height: windowHeight, width: timelineWidth + 80, borderRadius: 7, overflowY: 'auto', background: '#fff' }}>
         {/* Time label column */}
         <div style={{ width: 70, position: 'relative', height: timelineHeight, background: 'linear-gradient(to right, #f3f4f6 90%, transparent)' }}>
-          {timelineLabels.map(({ hour, y }) => (
+          {timelineLabels.map(({ hour, y }, idx) => (
             <div key={hour + '-' + y} style={{
               position: 'absolute',
               left: 0,
-              top: timeToY(y) - 18,
+              top: idx === 0 ? timeToY(y) : timeToY(y) - 18, // for 0:00, align top to grid line
               width: 70,
               height: 36,
               display: 'flex',
@@ -141,7 +140,7 @@ function DailyScheduleWidget() {
                 position: 'absolute',
                 left: 28,
                 top: timeToY(act.start),
-                height: Math.max(18, timeToY(act.end) - timeToY(act.start)),
+                height: Math.max(44, timeToY(act.end) - timeToY(act.start)), // min 44px for tick
                 width: timelineWidth - 80,
                 background: act.done ? '#e0f2fe' : '#fbbf24',
                 color: act.done ? '#888' : '#222',

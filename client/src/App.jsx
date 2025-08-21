@@ -14,7 +14,7 @@ export default function App() {
     { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2, color: "#1f2937" },
     { id: "calendar", title: "Calendar", col: 3, row: 0, w: 4, h: 3, color: "#0d9488" },
     { id: "todo", title: "TODO List", col: 7, row: 0, w: 3, h: 4, color: "#4e4e4eff" },
-    { id: "schedule", title: "Daily Schedule", col: 10, row: 0, w: 4, h: 7, color: "#fbbf24" },
+    { id: "schedule", title: "Daily Schedule", col: 10, row: 0, w: 4, h: 4.2, color: "#fbbf24" },
     { id: "notes", title: "Notes", col: 0, row: 2, w: 3, h: 3, color: "#7c3aed" },
   ]);
 
@@ -39,7 +39,10 @@ export default function App() {
         fontFamily: "ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial",
       }}
     >
-
+      {/* Add button row (if you want a global add, otherwise move this to widgets) */}
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
+        {/* Example: <button>Add Widget</button> */}
+      </div>
 
       <WidgetGrid cols={17} rows={8} cellW={96} rowH={96} gap={16} showGrid>
         {widgets.map((w) => (
@@ -109,5 +112,3 @@ export default function App() {
     </div>
   );
 }
-
-// ...existing code...

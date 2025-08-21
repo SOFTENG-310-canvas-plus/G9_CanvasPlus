@@ -5,6 +5,7 @@ import React, { useState, useCallback } from "react";
 import WidgetGrid, { Widget } from "./components/WidgetGrid.jsx";
 import useGoogleCalendarEvents from "./hooks/useGoogleCalendarEvents";
 import WeatherWidget from "./components/WeatherWidget.jsx"
+import CalendarWidget from "./components/CalendarWidget.jsx";
 
 export default function App() {
   const [widgets, setWidgets] = useState([
@@ -18,9 +19,6 @@ export default function App() {
       prev.map((w) => (w.id === id ? { ...w, col: pos.col, row: pos.row } : w))
     );
   }, []);
-
-  // Hook must be called at component top-level
-  const { events, loading, error, needsAuth, signIn } = useGoogleCalendarEvents();
 
   return (
     <div
@@ -51,28 +49,7 @@ export default function App() {
             >
               {w.id === "weather" && <WeatherWidget />}
 
-              {w.id === "calendar" && (
-                (loading)
-                  ? <div>Loading events...</div>
-                  : needsAuth
-                    ? (
-                      <div>
-                        <div style={{ marginBottom: 8 }}>Sign in to view your calendar events.</div>
-                        <button onClick={signIn} style={{ padding: '8px 12px', borderRadius: 6 }}>Sign in with Google</button>
-                      </div>
-                    )
-                    : error
-                      ? <div style={{ color: 'salmon' }}>Error: {error}</div>
-                      : (!events || events.length === 0)
-                        ? <div>No upcoming events</div>
-                        : (
-                          <ul style={{ margin: 0, paddingLeft: 16 }}>
-                            {events.map(ev => (
-                              <li key={ev.id}>{ev.summary || '(no title)'} ({ev.start?.dateTime?.slice(11,16) || ev.start?.date})</li>
-                            ))}
-                          </ul>
-                        )
-              )}
+              {w.id === "calendar" && <CalendarWidget /* maxResults={5} timeMin={new Date()} */ />}
 
               {w.id === "notes" && (
                 <div>

@@ -65,27 +65,7 @@ export default function useGoogleCalendarEvents({ maxResults = 10, timeMin = new
                 throw new Error('Google Identity Services not available');
             }
 
-            // Create a token client for requesting OAuth access tokens
-            const tokenClient = window.google.accounts.oauth2.initTokenClient({
-                client_id: CLIENT_ID,
-                scope: SCOPES,
-            });
-
-        // Wrap token requests in a Promise for async/await use
-        const requestToken = (opts = {}) =>
-            new Promise((resolve, reject) => {
-            try {
-                tokenClient.callback = (resp) => {
-                    if (resp && resp.access_token) resolve(resp); // success path
-                    else reject(resp || new Error('No token received'));
-                };
-                tokenClient.requestAccessToken(opts); // triggers silent or interactive flow
-            } catch (e) {
-                reject(e);
-            }
-            });
-
-        // 2) Try to reuse a cached token if not expired (sessionStorage = per-tab)
+            // 2) Try to reuse a cached token if not expired (sessionStorage = per-tab)
         const saved = sessionStorage.getItem(TOKEN_KEY);
         let tokenResp = null;
         if (saved) {
@@ -98,19 +78,12 @@ export default function useGoogleCalendarEvents({ maxResults = 10, timeMin = new
                 /* ignore parse errors */
             }
         }
-
-        // If we don't have a valid token yet, attempt a silent token request (no popup).
-        // This works if the user previously consented on this origin.
+        // If we don't have a valid token yet, do NOT attempt silent auth.
+        // Require the user to explicitly click "Sign in" to start the OAuth flow.
         if (!tokenResp) {
-            try {
-                tokenResp = await requestToken({ prompt: 'none' });
-            } catch (e) {
-                // Silent auth failed (first visit, blocked cookies, no prior consent, etc.)
-                // Tell the UI to show the "Sign in" button and bail out early.
-                setNeedsAuth(true);
-                setLoading(false);
-                return;
-            }
+            setNeedsAuth(true);
+            setLoading(false);
+            return;
         }
 
         // 3) With a token, call the Calendar API for upcoming events

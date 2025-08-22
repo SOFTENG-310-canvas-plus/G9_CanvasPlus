@@ -206,16 +206,16 @@ function TodoWidget() {
               setNewCategory("");
             }}>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 14, fontWeight: 500, color: '#22223b', marginBottom: 4, display: 'block' }}>Title</label>
-                <input value={modalTitle} onChange={e => setModalTitle(e.target.value)} required placeholder="Task title..." style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none' }} />
+                <label htmlFor="todo-title" style={{ fontSize: 14, fontWeight: 500, color: '#22223b', marginBottom: 4, display: 'block' }}>Title</label>
+                <input id="todo-title" value={modalTitle} onChange={e => setModalTitle(e.target.value)} required placeholder="Task title..." style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none' }} />
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 14, fontWeight: 500, color: '#22223b', marginBottom: 4, display: 'block' }}>Due Date</label>
-                <input type="datetime-local" value={modalDue} onChange={e => setModalDue(e.target.value)} style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none' }} />
+                <label htmlFor="todo-due-date" style={{ fontSize: 14, fontWeight: 500, color: '#22223b', marginBottom: 4, display: 'block' }}>Due Date</label>
+                <input id="todo-due-date" type="datetime-local" value={modalDue} onChange={e => setModalDue(e.target.value)} style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none' }} />
               </div>
               <div style={{ marginBottom: 18 }}>
-                <label style={{ fontSize: 14, fontWeight: 500, color: '#22223b', marginBottom: 4, display: 'block' }}>Category</label>
-                <select value={modalCategory} onChange={e => setModalCategory(e.target.value)} required style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', marginBottom: 8 }}>
+                <label htmlFor="todo-category" style={{ fontSize: 14, fontWeight: 500, color: '#22223b', marginBottom: 4, display: 'block' }}>Category</label>
+                <select id="todo-category" value={modalCategory} onChange={e => setModalCategory(e.target.value)} required style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', marginBottom: 8 }}>
                   <option value="" disabled>Select category...</option>
                   {addCategoryList.map(c => (
                     <option key={c} value={c}>{c}</option>
@@ -223,7 +223,7 @@ function TodoWidget() {
                   <option value="__new__">+ Create new category</option>
                 </select>
                 {modalCategory === '__new__' && (
-                  <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="New category name..." style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', marginTop: 6 }} />
+                  <input id="todo-new-category" value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="New category name..." style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', marginTop: 6 }} />
                 )}
               </div>
               <button type="submit" style={{ width: '100%', padding: '10px 0', borderRadius: 8, background: '#22223b', color: '#fff', border: 'none', fontWeight: 600, fontSize: 16, letterSpacing: 0.2, cursor: 'pointer', transition: 'background 0.2s' }}>Add Task</button>

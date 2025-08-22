@@ -292,16 +292,16 @@ function DailyScheduleWidget() {
             <h3 style={{ margin: 0, marginBottom: 12, fontWeight: 700, fontSize: 15, color: '#22223b' }}>Add Activity</h3>
             <form onSubmit={handleAddActivity}>
               <div style={{ marginBottom: 10 }}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#22223b', marginBottom: 3, display: 'block' }}>Title</label>
-                <input value={modalTitle} onChange={e => setModalTitle(e.target.value)} required placeholder="Activity title..." style={{ width: '100%', padding: '6px 8px', borderRadius: 5, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none' }} />
+                <label htmlFor="activity-title" style={{ fontSize: 11, fontWeight: 600, color: '#22223b', marginBottom: 3, display: 'block' }}>Title</label>
+                <input id="activity-title" value={modalTitle} onChange={e => setModalTitle(e.target.value)} required placeholder="Activity title..." style={{ width: '100%', padding: '6px 8px', borderRadius: 5, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none' }} />
               </div>
               <div style={{ marginBottom: 10 }}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#22223b', marginBottom: 3, display: 'block' }}>Start Time</label>
-                <input type="time" value={modalTime} onChange={e => setModalTime(e.target.value)} required style={{ width: '100%', padding: '6px 8px', borderRadius: 5, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none' }} />
+                <label htmlFor="start-time" style={{ fontSize: 11, fontWeight: 600, color: '#22223b', marginBottom: 3, display: 'block' }}>Start Time</label>
+                <input id="start-time" type="time" value={modalTime} onChange={e => setModalTime(e.target.value)} required style={{ width: '100%', padding: '6px 8px', borderRadius: 5, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none' }} />
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: '#22223b', marginBottom: 3, display: 'block' }}>Duration (minutes)</label>
-                <input type="number" min={5} max={180} step={5} value={modalDuration} onChange={e => setModalDuration(e.target.value)} required style={{ width: '100%', padding: '6px 8px', borderRadius: 5, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none' }} />
+                <label htmlFor="duration-minutes" style={{ fontSize: 11, fontWeight: 600, color: '#22223b', marginBottom: 3, display: 'block' }}>Duration (minutes)</label>
+                <input id="duration-minutes" type="number" min={5} max={180} step={5} value={modalDuration} onChange={e => setModalDuration(e.target.value)} required style={{ width: '100%', padding: '6px 8px', borderRadius: 5, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none' }} />
               </div>
               <button type="submit" style={{ width: '100%', padding: '8px 0', borderRadius: 7, background: '#22223b', color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, letterSpacing: 0.2, cursor: 'pointer', transition: 'background 0.2s' }}>Add</button>
             </form>

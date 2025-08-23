@@ -1,18 +1,7 @@
-// =============================
-// File: /components/WidgetGrid.jsx
-// =============================
-import React, { createContext, useContext, useMemo, useRef, useEffect, useState, useCallback } from "react";
-
+import React, { createContext, useContext, useMemo, useRef, useEffect, useState } from "react";
+import "../css/widget-grid.css";
 const GridCtx = createContext(null);
 
-/**
- * WidgetGrid
- * Props:
- *  - cols, rows            (number of cells)
- *  - cellW, rowH, gap      (px)
- *  - showGrid              (bool)
- *  - className, style
- */
 export default function WidgetGrid({
   cols = 12,
   rows = 8,
@@ -25,20 +14,58 @@ export default function WidgetGrid({
   children,
 }) {
   const gridRef = useRef(null);
+  const wallpaperRef = useRef(null);
+  const [widgetColor, setWidgetColor] = useState("#007AFF");
+  const [wallpaper, setWallpaper] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const gridW = cols * cellW + (cols - 1) * gap;
   const gridH = rows * rowH + (rows - 1) * gap;
 
-  const background = showGrid
-    ? {
-      backgroundImage: `
-          linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)
-        `,
-      backgroundSize: `${cellW + gap}px ${rowH + gap}px`,
-      backgroundPosition: `0 0`,
+  useEffect(() => {
+    if (!wallpaperRef.current) return;
+    
+    const handlePointerMove = (e) => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      
+      const rect = wallpaperRef.current.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const moveX = (e.clientX - rect.left - centerX) / centerX * 6;
+      const moveY = (e.clientY - rect.top - centerY) / centerY * 6;
+      
+      wallpaperRef.current.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
+    };
+    
+    const handlePointerLeave = () => {
+      wallpaperRef.current.style.transform = 'translate3d(0, 0, 0)';
+    };
+    
+    const element = wallpaperRef.current;
+    element.addEventListener('pointermove', handlePointerMove);
+    element.addEventListener('pointerleave', handlePointerLeave);
+    
+    return () => {
+      element.removeEventListener('pointermove', handlePointerMove);
+      element.removeEventListener('pointerleave', handlePointerLeave);
+    };
+  }, []);
+
+  const handleWallpaperUpload = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.match('image.*')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setWallpaper(e.target.result);
+      };
+      reader.readAsDataURL(file);
     }
-    : {};
+  };
+
+  const handleColorChange = (e) => {
+    setWidgetColor(e.target.value);
+  };
 
   const ctxValue = useMemo(() => {
     const spanX = cellW + gap;
@@ -76,56 +103,96 @@ export default function WidgetGrid({
       spanX,
       spanY,
       gridRef,
+      widgetColor,
       cellToPxRect,
       clampToBounds,
       deltaPxToDeltaCells,
     };
-  }, [cols, rows, cellW, rowH, gap, gridW, gridH]);
+  }, [cols, rows, cellW, rowH, gap, gridW, gridH, widgetColor]);
 
   return (
     <GridCtx.Provider value={ctxValue}>
-      <div
-        ref={gridRef}
-        role="grid"
-        aria-rowcount={rows}
-        aria-colcount={cols}
-        className={className}
-        style={{
-          position: "relative",
-          width: gridW,
-          height: gridH,
-          borderRadius: 12,
-          backgroundColor: "#0f1117",
-          ...background,
-          ...style,
-        }}
-      >
-        {children}
+      <div className="ios-widget-grid-container" ref={gridRef}>
+        <button 
+          className="ios-settings-button"
+          onClick={() => setShowSettings(!showSettings)}
+          aria-label="Open settings"
+        >
+          ⚙️
+        </button>
+        
+        {showSettings && (
+          <div className="ios-settings-panel">
+            <h3>Customize Widgets</h3>
+            
+            <div className="ios-setting-group">
+              <label>Widget Color</label>
+              <input 
+                type="color" 
+                value={widgetColor} 
+                onChange={handleColorChange}
+                className="ios-color-picker"
+              />
+              <div className="color-preview" style={{backgroundColor: widgetColor}}>
+                Current Color: {widgetColor}
+              </div>
+            </div>
+            
+            <div className="ios-setting-group">
+              <label>Wallpaper</label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleWallpaperUpload}
+                className="ios-wallpaper-upload"
+              />
+            </div>
+            
+            <button 
+              className="ios-close-settings"
+              onClick={() => setShowSettings(false)}
+            >
+              Close
+            </button>
+          </div>
+        )}
+        
+        {/* New clipping wrapper */}
+        <div className="ios-grid-clip">
+          <div 
+            className="ios-wallpaper" 
+            ref={wallpaperRef}
+            style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : {}}
+          ></div>
+
+          <div
+            role="grid"
+            aria-rowcount={rows}
+            aria-colcount={cols}
+            className={`ios-widget-grid ${className} ${showGrid ? 'show-grid' : ''}`}
+            style={{
+              width: gridW,
+              height: gridH,
+              '--cell-width': `${cellW}px`,
+              '--cell-height': `${rowH}px`,
+              '--grid-gap': `${gap}px`,
+              ...style,
+            }}
+          >
+            {children}
+          </div>
+        </div>
       </div>
     </GridCtx.Provider>
-  );
-}
+  );}
 
-/**
- * Widget
- * Controlled component:
- *  - id, col, row, w, h
- *  - color (optional), className, children
- *  - onMove(id, {col,row}) -> parent updates position
- *
- * Accessibility:
- *  - Focus the handle
- *  - Space/Enter to grab/drop
- *  - Arrows to move when grabbed
- *  - Escape to cancel
- */
 export function Widget({
   id,
   col,
   row,
   w = 2,
   h = 2,
-  color = "#1f2937",
+  color,
   className = "",
   style = {},
   onMove,
@@ -138,21 +205,19 @@ export function Widget({
   const {
     spanX,
     spanY,
-    cellW,
-    rowH,
-    gap,
+    widgetColor,
     cellToPxRect,
     clampToBounds,
     deltaPxToDeltaCells,
-    gridRef,
   } = ctx;
 
   const [dragging, setDragging] = useState(false);
-  const [grabbed, setGrabbed] = useState(false); // keyboard grab mode
-  const [ghost, setGhost] = useState({ c: col, r: row }); // landing preview
+  const [grabbed, setGrabbed] = useState(false);
+  const [ghost, setGhost] = useState({ c: col, r: row });
   const originRef = useRef({ c: col, r: row, x: 0, y: 0, pointerId: null });
 
-  // keep ghost in sync if parent moves externally
+  const accentColor = color || widgetColor;
+
   useEffect(() => {
     if (!dragging && !grabbed) setGhost({ c: col, r: row });
   }, [col, row, dragging, grabbed]);
@@ -172,10 +237,8 @@ export function Widget({
   };
 
   const onPointerDown = (e) => {
-    // only left button or primary touch
     if (e.button != null && e.button !== 0) return;
 
-    // start drag via handle only
     const handle = e.currentTarget;
     handle.setPointerCapture?.(e.pointerId);
 
@@ -207,7 +270,6 @@ export function Widget({
     if (commit && (ghost.c !== col || ghost.r !== row)) {
       onMove?.(id, { col: ghost.c, row: ghost.r });
     } else {
-      // reset preview if cancelled
       setGhost({ c: col, r: row });
     }
   };
@@ -215,16 +277,13 @@ export function Widget({
   const onPointerUp = () => endDrag(true);
   const onPointerCancel = () => endDrag(false);
 
-  // Keyboard a11y on the handle
   const onKeyDown = (e) => {
     if (e.key === " " || e.key === "Enter") {
       e.preventDefault();
       if (!grabbed) {
-        // start keyboard grab
         setGrabbed(true);
         setGhost({ c: col, r: row });
       } else {
-        // drop
         setGrabbed(false);
         if (ghost.c !== col || ghost.r !== row) {
           onMove?.(id, { col: ghost.c, row: ghost.r });
@@ -252,7 +311,6 @@ export function Widget({
     }
   };
 
-  // Style/rects
   const rect = cellToPxRect(col, row, w, h);
   const ghostRect = cellToPxRect(ghost.c, ghost.r, w, h);
 
@@ -266,90 +324,56 @@ export function Widget({
     onPointerMove,
     onPointerUp,
     onPointerCancel,
-    style: {
-      cursor: dragging ? "grabbing" : "grab",
-      touchAction: "none", // prevent scroll while dragging on touch
-    },
+    className: "ios-widget-handle",
   };
 
   return (
     <>
-      {/* Landing preview (ghost) */}
       {(dragging || grabbed) && (
         <div
           aria-hidden
+          className="ios-widget-ghost"
           style={{
-            position: "absolute",
             left: ghostRect.x,
             top: ghostRect.y,
             width: ghostRect.w,
             height: ghostRect.h,
-            border: "2px dashed rgba(255,255,255,0.35)",
-            borderRadius: 10,
-            background: "rgba(255,255,255,0.04)",
-            pointerEvents: "none",
-            zIndex: 5,
+            borderColor: accentColor,
           }}
         />
       )}
 
-      {/* Actual widget */}
       <div
         role="gridcell"
         aria-colindex={col + 1}
         aria-rowindex={row + 1}
-        className={className}
+        className={`ios-widget ${dragging || grabbed ? 'dragging' : ''} ${className}`}
         style={{
-          position: "absolute",
           left: rect.x,
           top: rect.y,
           width: rect.w,
           height: rect.h,
-          borderRadius: 12,
-          background: color,
-          boxShadow: dragging || grabbed ? "0 0 0 3px rgba(99, 102, 241, 0.8)" : "0 1px 10px rgba(0,0,0,0.25)",
-          transition: dragging || grabbed ? "none" : "left 160ms, top 160ms, box-shadow 160ms",
-          overflow: "hidden",
-          color: "white",
-          boxSizing: "border-box",
+          '--accent-color': accentColor,
           ...style,
         }}
       >
-        {/* Handle bar */}
         <div
           {...handleProps}
           title="Drag to move"
-          style={{
-            ...handleProps.style,
-            height: 36,
-            padding: "0 10px",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            background: "rgba(255,255,255,0.06)",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            userSelect: "none",
-          }}
+          
         >
-          <div
-            aria-hidden
-            style={{
-              width: 16,
-              height: 16,
-              borderRadius: 4,
-              background:
-                "repeating-linear-gradient(45deg, rgba(255,255,255,0.35), rgba(255,255,255,0.35) 2px, transparent 2px, transparent 4px)",
-              opacity: 0.8,
-            }}
-          />
-          <div style={{ fontSize: 12, opacity: 0.8, letterSpacing: 0.2 }}>{title}</div>
-          <div style={{ marginLeft: "auto", fontSize: 11, opacity: 0.6 }}>
-            {dragging || grabbed ? "Release to drop" : "Drag handle"}
+          <div className="ios-widget-grabber">
+
+          </div>
+          <div className="ios-widget-title" style={{ color: accentColor }}>
+            {title}
+          </div>
+          <div className="ios-widget-hint">
+            {dragging || grabbed ? "Release to drop" : "Drag to move"}
           </div>
         </div>
 
-        {/* Content area (stays interactive) */}
-        <div style={{ padding: 12, width: "100%", height: `calc(100% - 36px)`, overflow: "auto", boxSizing: "border-box" }}>{children}</div>
+        <div className="ios-widget-content">{children}</div>
       </div>
     </>
   );

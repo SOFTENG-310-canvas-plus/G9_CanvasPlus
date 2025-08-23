@@ -29,9 +29,10 @@
 }
 
 /* Outer container: let fixed overlays show outside */
-.ios-widget-grid-container {
-  position: relative;
-  margin: 20px;
+.ios-widget-grid-container { margin: 0; }
+.ios-grid-clip {
+  width: 100dvw;  /* dynamic viewport (iOS/Android safe) */
+  height: 100dvh;
 }
 
 /* New inner clip layer holds wallpaper + grid with rounded corners */

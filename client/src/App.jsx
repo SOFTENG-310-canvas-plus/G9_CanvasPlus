@@ -35,9 +35,7 @@ export default function App() {
   const { events, loading, error, needsAuth, signIn } = useGoogleCalendarEvents();
 
   return (
-    <
-
-    >
+    <>
 
       {/* Add button row (if you want a global add, otherwise move this to widgets) */}
 

@@ -1,81 +1,125 @@
-import React, { createContext, useContext, useMemo, useRef, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import "../css/widget-grid.css";
+
 const GridCtx = createContext(null);
 
 export default function WidgetGrid({
   cols = 12,
   rows = 8,
-  cellW = 96,
-  rowH = 96,
+  cellW = 96, // initial fallback only
+  rowH = 96, // initial fallback only
   gap = 16,
   showGrid = true,
   className = "",
   style = {},
   children,
 }) {
-  const gridRef = useRef(null);
+  const containerRef = useRef(null);
+  const clipRef = useRef(null);
   const wallpaperRef = useRef(null);
+
   const [widgetColor, setWidgetColor] = useState("#007AFF");
   const [wallpaper, setWallpaper] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 
-  const gridW = cols * cellW + (cols - 1) * gap;
-  const gridH = rows * rowH + (rows - 1) * gap;
+  // Derived cell sizes so the grid fills the viewport area exactly
+  const [cw, setCw] = useState(cellW);
+  const [rh, setRh] = useState(rowH);
 
+  // Recompute cell sizes from the clip’s live size
+  useLayoutEffect(() => {
+    const el = clipRef.current;
+    if (!el) return;
+
+    const recompute = () => {
+      const rect = el.getBoundingClientRect();
+      const availW = rect.width;
+      const availH = rect.height;
+
+      const nextCw = (availW - (cols - 1) * gap) / cols;
+      const nextRh = (availH - (rows - 1) * gap) / rows;
+
+      setCw(nextCw);
+      setRh(nextRh);
+    };
+
+    // Run now
+    recompute();
+
+    // Watch size changes
+    const ro = new ResizeObserver(recompute);
+    ro.observe(el);
+
+    // Track URL bar / viewport dynamic changes
+    const onVV = () => recompute();
+    window.addEventListener("resize", onVV);
+    window.visualViewport?.addEventListener("resize", onVV);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onVV);
+      window.visualViewport?.removeEventListener?.("resize", onVV);
+    };
+  }, [cols, rows, gap]);
+
+  const gridW = cols * cw + (cols - 1) * gap;
+  const gridH = rows * rh + (rows - 1) * gap;
+
+  // Subtle parallax wallpaper
   useEffect(() => {
     if (!wallpaperRef.current) return;
-    
+
     const handlePointerMove = (e) => {
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const rect = wallpaperRef.current.getBoundingClientRect();
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
-      
-      const moveX = (e.clientX - rect.left - centerX) / centerX * 6;
-      const moveY = (e.clientY - rect.top - centerY) / centerY * 6;
-      
+      const moveX = ((e.clientX - rect.left - centerX) / centerX) * 6;
+      const moveY = ((e.clientY - rect.top - centerY) / centerY) * 6;
       wallpaperRef.current.style.transform = `translate3d(${moveX}px, ${moveY}px, 0)`;
     };
-    
+
     const handlePointerLeave = () => {
-      wallpaperRef.current.style.transform = 'translate3d(0, 0, 0)';
+      wallpaperRef.current.style.transform = "translate3d(0, 0, 0)";
     };
-    
-    const element = wallpaperRef.current;
-    element.addEventListener('pointermove', handlePointerMove);
-    element.addEventListener('pointerleave', handlePointerLeave);
-    
+
+    const el = wallpaperRef.current;
+    el.addEventListener("pointermove", handlePointerMove);
+    el.addEventListener("pointerleave", handlePointerLeave);
     return () => {
-      element.removeEventListener('pointermove', handlePointerMove);
-      element.removeEventListener('pointerleave', handlePointerLeave);
+      el.removeEventListener("pointermove", handlePointerMove);
+      el.removeEventListener("pointerleave", handlePointerLeave);
     };
   }, []);
 
   const handleWallpaperUpload = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.match('image.*')) {
+    const file = e.target.files?.[0];
+    if (file && file.type.match("image.*")) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setWallpaper(e.target.result);
-      };
+      reader.onload = (ev) => setWallpaper(ev.target.result);
       reader.readAsDataURL(file);
     }
   };
 
-  const handleColorChange = (e) => {
-    setWidgetColor(e.target.value);
-  };
+  const handleColorChange = (e) => setWidgetColor(e.target.value);
 
   const ctxValue = useMemo(() => {
-    const spanX = cellW + gap;
-    const spanY = rowH + gap;
+    const spanX = cw + gap;
+    const spanY = rh + gap;
 
     const cellToPxRect = (c, r, w, h) => ({
       x: c * spanX,
       y: r * spanY,
-      w: w * cellW + (w - 1) * gap,
-      h: h * rowH + (h - 1) * gap,
+      w: w * cw + (w - 1) * gap,
+      h: h * rh + (h - 1) * gap,
     });
 
     const clampToBounds = (c, r, w, h) => {
@@ -95,60 +139,63 @@ export default function WidgetGrid({
     return {
       cols,
       rows,
-      cellW,
-      rowH,
+      cellW: cw,
+      rowH: rh,
       gap,
       gridW,
       gridH,
       spanX,
       spanY,
-      gridRef,
+      gridRef: containerRef,
       widgetColor,
       cellToPxRect,
       clampToBounds,
       deltaPxToDeltaCells,
     };
-  }, [cols, rows, cellW, rowH, gap, gridW, gridH, widgetColor]);
+  }, [cols, rows, cw, rh, gap, gridW, gridH, widgetColor]);
 
   return (
     <GridCtx.Provider value={ctxValue}>
-      <div className="ios-widget-grid-container" ref={gridRef}>
-        <button 
+      <div className="ios-widget-grid-container" ref={containerRef}>
+        <button
           className="ios-settings-button"
-          onClick={() => setShowSettings(!showSettings)}
+          onClick={() => setShowSettings((v) => !v)}
           aria-label="Open settings"
         >
           ⚙️
         </button>
-        
+
         {showSettings && (
           <div className="ios-settings-panel">
             <h3>Customize Widgets</h3>
-            
+
             <div className="ios-setting-group">
               <label>Widget Color</label>
-              <input 
-                type="color" 
-                value={widgetColor} 
+              <input
+                type="color"
+                value={widgetColor}
                 onChange={handleColorChange}
                 className="ios-color-picker"
               />
-              <div className="color-preview" style={{backgroundColor: widgetColor}}>
+              <div
+                className="color-preview"
+                style={{ backgroundColor: widgetColor }}
+              >
                 Current Color: {widgetColor}
               </div>
             </div>
-            
+
             <div className="ios-setting-group">
               <label>Wallpaper</label>
-              <input 
-                type="file" 
-                accept="image/*" 
+              <input
+                type="file"
+                accept="image/*"
                 onChange={handleWallpaperUpload}
                 className="ios-wallpaper-upload"
               />
             </div>
-            
-            <button 
+
+            <button
               className="ios-close-settings"
               onClick={() => setShowSettings(false)}
             >
@@ -156,26 +203,26 @@ export default function WidgetGrid({
             </button>
           </div>
         )}
-        
-        {/* New clipping wrapper */}
-        <div className="ios-grid-clip">
-          <div 
-            className="ios-wallpaper" 
+
+        {/* Full-viewport clip */}
+        <div className="ios-grid-clip" ref={clipRef}>
+          <div
+            className="ios-wallpaper"
             ref={wallpaperRef}
             style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : {}}
-          ></div>
+          />
 
           <div
             role="grid"
             aria-rowcount={rows}
             aria-colcount={cols}
-            className={`ios-widget-grid ${className} ${showGrid ? 'show-grid' : ''}`}
+            className={`ios-widget-grid ${className} ${showGrid ? "show-grid" : ""}`}
             style={{
               width: gridW,
               height: gridH,
-              '--cell-width': `${cellW}px`,
-              '--cell-height': `${rowH}px`,
-              '--grid-gap': `${gap}px`,
+              "--cell-width": `${cw}px`,
+              "--cell-height": `${rh}px`,
+              "--grid-gap": `${gap}px`,
               ...style,
             }}
           >
@@ -184,8 +231,8 @@ export default function WidgetGrid({
         </div>
       </div>
     </GridCtx.Provider>
-  );}
-
+  );
+}
 export function Widget({
   id,
   col,

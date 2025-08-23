@@ -7,15 +7,10 @@ import WidgetGrid, { Widget } from "./components/WidgetGrid.jsx";
 import useGoogleCalendarEvents from "./hooks/useGoogleCalendarEvents";
 
 import WeatherWidget from "./components/WeatherWidget.jsx"
-
-import CalendarWidget from "./components/CalendarWidget.jsx";
-
 import ClockWidget from "./components/ClockWidget.jsx";
-
 import SearchWidget from "./components/SearchWidget.jsx"
 import DailyScheduleWidget from "./components/DailyScheduleWidget.jsx";
 import TodoWidget from "./components/TodoWidget.jsx";
-
 
 
 export default function App() {
@@ -36,6 +31,9 @@ export default function App() {
     );
   }, []);
 
+  // Hook must be called at component top-level
+  const { events, loading, error, needsAuth, signIn } = useGoogleCalendarEvents();
+
   return (
     <div
       style={{
@@ -54,29 +52,26 @@ export default function App() {
         {/* Example: <button>Add Widget</button> */}
       </div>
 
-        <WidgetGrid cols={17} rows={8} cellW={96} rowH={96} gap={16} showGrid>
-          {widgets.map((w) => (
-            <Widget
-              key={w.id}
-              id={w.id}
-              title={w.title}
-              col={w.col}
-              row={w.row}
-              w={w.w}
-              h={w.h}
-              color={w.color}
-              onMove={handleMove}
-            >
-              {w.id === "weather" && <WeatherWidget />}
-              {w.id === "calendar" && <CalendarWidget /* maxResults={5} timeMin={new Date()} */ />}
-              {w.id === "search" && <SearchWidget />}
-              {w.id === "notes" && (
-
-
+      <WidgetGrid cols={17} rows={8} cellW={96} rowH={96} gap={16} showGrid>
+        {widgets.map((w) => (
+          <Widget
+            key={w.id}
+            id={w.id}
+            title={w.title}
+            col={w.col}
+            row={w.row}
+            w={w.w}
+            h={w.h}
+            color={w.color}
+            onMove={handleMove}
+          >
+            {w.id === "weather" && <WeatherWidget />}
+            {w.id === "search" && <SearchWidget />}
+            {w.id === "clock" && <ClockWidget />}
+            {w.id === "calendar" && (
               loading ? (
                 <div>Loading events...</div>
               ) : needsAuth ? (
-
                 <div>
                   <button onClick={signIn} style={{
                     background: '#6366f1', color: 'white', border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 600, fontSize: 15, cursor: 'pointer', marginTop: 8

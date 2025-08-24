@@ -248,6 +248,5 @@ a:hover {
 }
 
 /* CHANGE: Docs helper text */
-.read-the-docs {
-  color: var(--muted);
+  color: #888;
 }

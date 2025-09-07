@@ -75,9 +75,7 @@ body {
 
 /* CHANGE: Keep your existing root container but on modern palette */
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
@@ -245,8 +243,4 @@ a:hover {
     transition-duration: .001ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* CHANGE: Docs helper text */
-  color: #888;
 }

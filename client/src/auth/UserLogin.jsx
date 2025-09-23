@@ -1,31 +1,37 @@
 import { useState } from "react";
 import supabase from "./supabaseClient.js";
-import {toast, Toaster} from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function UserLogin() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const navigate = useNavigate();
 
-
-     async function handleSubmit(e){
+    async function handleSubmit(e) {
         e.preventDefault();
 
-         let { data, error } = await supabase.auth.signInWithPassword({
-             email: email,
-             password: password
-         })
+        let { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
 
-         if (error !== null) {
+        if (error !== null) {
             toast.error(error.message);
-            setEmail("")
-             setPassword("")
-         } else {
-             toast.success("Login successful");
-         }
+            setEmail("");
+            setPassword("");
+        } else {
+            toast.success("Login successful");
+            goToCanvasPlus();
+        }
+    }
 
-        console.log("Email:", email, "Password:", password);
-         console.log(data)
-         console.log(error)
+    function goToSignUp() {
+        navigate("/sign-up");
+    }
+
+    function goToCanvasPlus() {
+        navigate("/canvas-plus");
     }
 
     return (
@@ -90,11 +96,27 @@ export default function UserLogin() {
                 >
                     Sign In
                 </button>
+
+                {/* New: go to sign-up */}
+                <button
+                    type="button"
+                    onClick={goToSignUp}
+                    style={{
+                        width: "100%",
+                        marginTop: "10px",
+                        padding: "12px",
+                        borderRadius: "10px",
+                        border: "1px solid rgba(255,255,255,0.6)",
+                        backgroundColor: "transparent",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                    }}
+                >
+                    Click to Sign Up
+                </button>
             </form>
-            <Toaster
-                position="top-center"
-                reverseOrder={false}
-            />
+            <Toaster position="top-center" reverseOrder={false} />
         </div>
     );
 }

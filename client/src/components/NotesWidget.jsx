@@ -7,9 +7,11 @@ export default function NotesWidget() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editContent, setEditContent] = useState("");
 
- // Check logged in user and fetch notes
- // Currently Delete/Add are only available when logged in
+  // Check logged in user and fetch notes
+  // Currently Delete/Add/Edit are available when logged in
   useEffect(() => {
     checkUser();
   }, []);
@@ -73,6 +75,39 @@ export default function NotesWidget() {
     }
   };
 
+  const updateNote = async (noteId, newContent) => {
+    try {
+      const { error } = await supabase
+        .from("Notes")
+        .update({ content: newContent.trim(), updated_at: new Date().toISOString() })
+        .eq("id", noteId);
+
+      if (error) {
+        console.error("Error updating note:", error);
+      } else {
+        setNotes(notes.map(note => 
+          note.id === noteId 
+            ? { ...note, content: newContent.trim(), updated_at: new Date().toISOString() }
+            : note
+        ));
+        setEditingId(null);
+        setEditContent("");
+      }
+    } catch (error) {
+      console.error("Error updating note:", error);
+    }
+  };
+
+  const startEdit = (note) => {
+    setEditingId(note.id);
+    setEditContent(note.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditContent("");
+  };
+
   const deleteNote = async (noteId) => {
     try {
       const { error } = await supabase
@@ -96,14 +131,16 @@ export default function NotesWidget() {
     }
   };
 
+  // From here, code below is styling and rendering
   if (loading) {
     return (
-      <div style={{ color: "white", opacity: 0.7, padding: 8 }}>
+      <div style={{ color: "black", opacity: 0.7, padding: 8 }}>
         Loading notes...
       </div>
     );
   }
 
+  // Assume user is logged in to access widgets
   if (!user) {
     return (
       <div>
@@ -134,7 +171,6 @@ export default function NotesWidget() {
       <textarea
         value={newNote}
         onChange={(e) => setNewNote(e.target.value)}
-        onKeyPress={handleKeyPress}
         rows={6}
         placeholder="Type here… (Ctrl+Enter to save)"
         disabled={saving}
@@ -143,8 +179,10 @@ export default function NotesWidget() {
           padding: 8,
           borderRadius: 8,
           border: "1px solid rgba(255,255,255,0.12)",
+          // Last digits control opacity, currently set low to not too distracting
+          // left is while the text is being saved
           background: saving ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.06)",
-          color: "white",
+          color: "black",
           outline: "none",
           resize: "vertical",
           opacity: saving ? 0.6 : 1
@@ -160,7 +198,7 @@ export default function NotesWidget() {
           borderRadius: 6,
           border: "1px solid rgba(255,255,255,0.12)",
           background: (newNote.trim() && !saving) ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)",
-          color: "white",
+          color: "black",
           cursor: (newNote.trim() && !saving) ? "pointer" : "not-allowed",
           opacity: (newNote.trim() && !saving) ? 1 : 0.5,
           fontSize: 12
@@ -187,46 +225,126 @@ export default function NotesWidget() {
                   background: "rgba(255,255,255,0.04)"
                 }}
               >
-                <div style={{ 
-                  color: "white", 
-                  fontSize: 13, 
-                  marginBottom: 6,
-                  lineHeight: 1.4,
-                  whiteSpace: "pre-wrap"
-                }}>
-                  {note.content}
-                </div>
-                
-                <div style={{ 
-                  display: "flex", 
-                  justifyContent: "space-between", 
-                  alignItems: "center" 
-                }}>
-                  <span style={{ fontSize: 11, opacity: 0.5, color: "white" }}>
-                    {new Date(note.created_at).toLocaleString()}
-                  </span>
-                  
-                  <button
-                    onClick={() => deleteNote(note.id)}
-                    style={{
-                      fontSize: 10,
-                      padding: "3px 8px",
-                      borderRadius: 4,
-                      border: "1px solid rgba(255,100,100,0.3)",
-                      background: "rgba(255,100,100,0.1)",
-                      color: "#ffaaaa",
-                      cursor: "pointer"
-                    }}
-                    onMouseOver={(e) => {
-                      e.target.style.background = "rgba(255,100,100,0.2)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.background = "rgba(255,100,100,0.1)";
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
+                {editingId === note.id ? (
+                  <div>
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      style={{
+                        width: "100%",
+                        minHeight: 60,
+                        padding: 6,
+                        borderRadius: 4,
+                        border: "1px solid rgba(255,255,255,0.2)",
+                        background: "rgba(255,255,255,0.1)",
+                        color: "black",
+                        outline: "none",
+                        resize: "vertical",
+                        marginBottom: 6
+                      }}
+                    />
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        onClick={() => updateNote(note.id, editContent)}
+                        disabled={!editContent.trim()}
+                        style={{
+                          fontSize: 10,
+                          padding: "3px 8px",
+                          borderRadius: 4,
+                          border: "1px solid rgba(100,255,100,0.3)",
+                          background: editContent.trim() ? "rgba(100,255,100,0.1)" : "rgba(100,255,100,0.05)",
+                          color: editContent.trim() ? "#22aa22" : "rgba(170,255,170,0.3)",
+                          cursor: editContent.trim() ? "pointer" : "not-allowed"
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        style={{
+                          fontSize: 10,
+                          padding: "3px 8px",
+                          borderRadius: 4,
+                           border: "1px solid rgba(255,100,100,0.3)",
+                          background: "rgba(255,100,100,0.1)",
+                          color: "#ffaaaa",
+                          cursor: "pointer"
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ 
+                      color: "black", 
+                      fontSize: 13, 
+                      marginBottom: 6,
+                      lineHeight: 1.4,
+                      whiteSpace: "pre-wrap"
+                    }}>
+                      {note.content}
+                    </div>
+                    
+                    <div style={{ 
+                      display: "flex", 
+                      justifyContent: "space-between", 
+                      alignItems: "center" 
+                    }}>
+                      <span style={{ fontSize: 11, opacity: 0.5, color: "black" }}>
+                        {new Date(note.created_at).toLocaleString()}
+                        {note.updated_at !== note.created_at && (
+                          <span style={{ fontStyle: "italic" }}> (edited)</span>
+                        )}
+                      </span>
+                      
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button
+                          onClick={() => startEdit(note)}
+                          style={{
+                            fontSize: 10,
+                            padding: "3px 8px",
+                            borderRadius: 4,
+                            border: "1px solid rgba(100,150,255,0.3)",
+                            background: "rgba(100,150,255,0.1)",
+                            color: "#000000ff",
+                            cursor: "pointer"
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = "rgba(100,150,255,0.2)";
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = "rgba(100,150,255,0.1)";
+                          }}
+                        >
+                          Edit
+                        </button>
+                        
+                        <button
+                          onClick={() => deleteNote(note.id)}
+                          style={{
+                            fontSize: 10,
+                            padding: "3px 8px",
+                            borderRadius: 4,
+                            border: "1px solid rgba(255,100,100,0.3)",
+                            background: "rgba(255,100,100,0.1)",
+                            color: "#ffaaaa",
+                            cursor: "pointer"
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = "rgba(255,100,100,0.2)";
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = "rgba(255,100,100,0.1)";
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

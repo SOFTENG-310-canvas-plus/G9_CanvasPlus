@@ -39,7 +39,7 @@ describe('CanvasWidget', () => {
 });
 
 describe('CanvasWidget', () => {
-  it('highlights overdue', async () => {
+  it('highlights overdue text', async () => {
     const { container } = render(<CanvasWidget />);
     
     await waitFor(() => {
@@ -54,5 +54,18 @@ describe('CanvasWidget', () => {
         fontWeight: 'bold',
         opacity: '1'
       });
+  });
+});
+
+describe('CanvasWidget', () => {
+  it('highlights overdue border', async () => {
+    const { container } = render(<CanvasWidget />);
+    
+    await waitFor(() => {
+        expect(screen.getByText('Assignment 1')).toBeInTheDocument();
+      });
+
+      const overdueTask = screen.getByText('Assignment 1').closest('li');
+      expect(overdueTask).toHaveStyle({ border: '2.5px solid #ef4444' });
   });
 });

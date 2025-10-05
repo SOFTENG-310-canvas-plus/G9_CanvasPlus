@@ -37,3 +37,22 @@ describe('CanvasWidget', () => {
     expect(utils.getByText('All Dates')).toBeInTheDocument();
   });
 });
+
+describe('CanvasWidget', () => {
+  it('highlights overdue', async () => {
+    const { container } = render(<CanvasWidget />);
+    
+    await waitFor(() => {
+        expect(screen.getByText('Assignment 1')).toBeInTheDocument();
+      });
+
+      const overdueTask = screen.getByText('Assignment 1').closest('li');
+      const dueDate = overdueTask.querySelector('div[style*="color"]');
+      
+      expect(dueDate).toHaveStyle({ 
+        color: '#ef4444',
+        fontWeight: 'bold',
+        opacity: '1'
+      });
+  });
+});

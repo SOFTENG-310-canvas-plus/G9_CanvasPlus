@@ -164,6 +164,7 @@ function CanvasWidget() {
               return new Date(a.dueDate) - new Date(b.dueDate);
             })
             .map(todo => {
+              const isOverdue = todo.dueDate && new Date(todo.dueDate) < new Date() && !todo.done;
               return (
                 <li
                   key={todo.id}
@@ -174,6 +175,7 @@ function CanvasWidget() {
                     background: todo.done ? "#e0f2fe" : courseColors[todo.course] || "#fff",
                     color: todo.done ? "#888" : "#222",
                     borderRadius: 10,
+                    border: isOverdue ? "2.5px solid #ef4444" : "none",
                     padding: 12,
                     boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                     position: "relative",
@@ -275,7 +277,12 @@ function CanvasWidget() {
                     </div>
                     <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 2 }}>{todo.course}</div>
                     {todo.dueDate && (
-                      <div style={{ fontSize: 12, opacity: 0.7 }}>
+                      <div style={{
+                         fontSize: 12,
+                         opacity: isOverdue ? 1 : 0.7,
+                         color: isOverdue ? "#ef4444" : 'inherit',
+                         fontWeight: isOverdue ? "bold" : 'normal',
+                          }}>
                         Due: {new Date(todo.dueDate).toLocaleString()}
                       </div>
                     )}

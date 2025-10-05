@@ -69,3 +69,14 @@ describe('CanvasWidget', () => {
       expect(overdueTask).toHaveStyle({ border: '2.5px solid #ef4444' });
   });
 });
+
+describe('CanvasWidget', () => {
+  it('completed tasks show when toggled', async () => {
+    render(<CanvasWidget />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Show Completed')).toBeInTheDocument();
+    });
+
+  });
+});

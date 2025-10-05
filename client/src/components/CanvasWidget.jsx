@@ -12,6 +12,7 @@ function CanvasWidget() {
   const [error, setError] = useState(null);
   const [courseFilter, setCourseFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("all");
+  const [showCompleted, setShowCompleted] = useState(false);
 
   // Assign a color to each course
   const courseColors = {
@@ -60,8 +61,12 @@ function CanvasWidget() {
       filtered = filtered.filter(t => t.dueDate && new Date(t.dueDate) >= minDate && new Date(t.dueDate) < maxDate);
     }
   }
-  // Only show incomplete todos
-  filtered = filtered.filter(t => !t.done);
+  // Filter by completion status
+  if (!showCompleted) {
+    filtered = filtered.filter(t => !t.done);
+  } else {
+    filtered = filtered.filter(t => t.done);
+  }
 
   // Unique course list for filter dropdown and add modal
   const courseList = ["all", ...Array.from(new Set(todos.map(t => t.course)))];
@@ -147,6 +152,23 @@ function CanvasWidget() {
             <option value="7days">Next 7 Days</option>
             <option value="14days">Next 14 Days</option>
           </select>
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            style={{
+              fontSize: 13,
+              padding: '6px 12px',
+              borderRadius: 5,
+              border: '1.5px solid #e5e7eb',
+              background: showCompleted ? '#6366f1' : '#f9fafb',
+              color: showCompleted ? '#fff' : '#22223b',
+              outline: 'none',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              fontWeight: 500,
+            }}
+          >
+            {showCompleted ? 'Hide Completed' : 'Show Completed'}
+          </button>
         </div>
       </div>
 
@@ -175,9 +197,9 @@ function CanvasWidget() {
                     background: todo.done ? "#e0f2fe" : courseColors[todo.course] || "#fff",
                     color: todo.done ? "#888" : "#222",
                     borderRadius: 10,
-                    border: isOverdue ? "2.5px solid #ef4444" : "none",
                     padding: 12,
                     boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                    border: isOverdue ? "2.5px solid #ef4444" : "none",
                     position: "relative",
                     transition: "background 0.2s, opacity 0.35s, transform 0.35s",
                     opacity: fadingIds.includes(todo.id) ? 0 : 1,

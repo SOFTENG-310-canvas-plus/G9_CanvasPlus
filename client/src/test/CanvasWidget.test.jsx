@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 
 describe('CanvasWidget', () => {
-  it('renders Add button and dropdowns', async () => {
+  it('renders dropdowns', async () => {
     const { container } = render(<CanvasWidget />);
     const utils = within(container);
     await waitFor(() => expect(utils.getByText('All Courses')).toBeInTheDocument());

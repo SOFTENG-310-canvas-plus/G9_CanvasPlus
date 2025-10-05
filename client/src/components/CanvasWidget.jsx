@@ -280,24 +280,6 @@ function CanvasWidget() {
                       </div>
                     )}
                   </div>
-                  {todo.source !== 'canvas' && (
-                    <button onClick={() => deleteTodo(todo.id)} style={{
-                      marginLeft: 10,
-                      background: "#fff",
-                      border: "1.5px solid #f87171",
-                      color: "#f87171",
-                      borderRadius: 8,
-                      fontSize: 16,
-                      fontWeight: 600,
-                      width: 32,
-                      height: 32,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                      transition: "background 0.2s, color 0.2s, border 0.2s"
-                    }} title="Delete task">✕</button>
-                  )}
                 </li>
               );
             })}

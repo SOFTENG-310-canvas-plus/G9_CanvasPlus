@@ -13,6 +13,7 @@ import SearchWidget from "./components/SearchWidget.jsx"
 import DailyScheduleWidget from "./components/DailyScheduleWidget.jsx";
 import TodoWidget from "./components/TodoWidget.jsx";
 import NotesWidget from './components/NotesWidget';
+import CanvasWidget from "./components/CanvasWidget.jsx";
 
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
     { id: "notes", title: "Notes", col: 0, row: 2, w: 3, h: 3 },
     { id: "gptWrapper", title: "ChatGPTWrapper", col: 3, row: 4, w: 6, h: 3 },
     { id: "search", title: "Search", col: 7, row: 0, w: 4, h: 1 },
+    { id: "canvas", title: "Canvas Tasks", col: 9, row: 3, w: 3, h: 4 },
 
   ]);
 
@@ -83,6 +85,7 @@ export default function App() {
             )}
 
             {w.id === "todo" && <TodoWidget />}
+            {w.id === "canvas" && <CanvasWidget />}
             {w.id === "schedule" && <DailyScheduleWidget />}
             {w.id === "notes" && <NotesWidget />}
           </Widget>

@@ -25,17 +25,16 @@ const debounce = (fn, ms = 300) => {
 };
 
 export default function WidgetGrid({
-  cols = 12,
-  rows = 8,
-  cellW = 96,
-  rowH = 96,
-  gap = 16,
-  showGrid = true,
-  className = "",
-  style = {},
-  children,
-  onResetLayout,
-}) {
+                                     cols = 12,
+                                     rows = 8,
+                                     cellW = 96, // initial fallback only
+                                     rowH = 96, // initial fallback only
+                                     gap = 16,
+                                     showGrid = true,
+                                     className = "",
+                                     style = {},
+                                     children,
+                                   }) {
   const containerRef = useRef(null);
   const clipRef = useRef(null);
   const wallpaperRef = useRef(null);
@@ -71,7 +70,10 @@ export default function WidgetGrid({
         if (prefs.background_type === "image" && prefs.background_value) {
           setWallpaper(prefs.background_value);
         } else if (prefs.background_type === "color" && prefs.background_value) {
+          // use solid-color background mode (optional)
           setWallpaper(null);
+          // If you want to apply page bg color, uncomment:
+          // document.body.style.backgroundColor = prefs.background_value;
         }
       }
       hydratedRef.current = true;
@@ -91,10 +93,10 @@ export default function WidgetGrid({
 
   // debounced explicit save from handlers
   const debouncedSave = useRef(
-    debounce((payload) => saveUserPreferences(payload).catch(console.error), 300)
+      debounce((payload) => saveUserPreferences(payload).catch(console.error), 300)
   ).current;
 
-  // Recompute cell sizes from the clip's live size
+  // Recompute cell sizes from the clip’s live size
   useLayoutEffect(() => {
     const el = clipRef.current;
     if (!el) return;
@@ -116,6 +118,7 @@ export default function WidgetGrid({
     const ro = new ResizeObserver(recompute);
     ro.observe(el);
 
+    // Track viewport changes
     const onVV = () => recompute();
     window.addEventListener("resize", onVV);
     window.visualViewport?.addEventListener("resize", onVV);
@@ -338,8 +341,7 @@ export default function WidgetGrid({
             {children}
           </div>
         </div>
-      </div>
-    </GridCtx.Provider>
+      </GridCtx.Provider>
   );
 }
 

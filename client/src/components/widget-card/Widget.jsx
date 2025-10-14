@@ -251,10 +251,8 @@ export default function Widget({
         />
       )}
 
-      <div
-        role="gridcell"
-        aria-colindex={col + 1}
-        aria-rowindex={row + 1}
+      <article
+        aria-label={`${title} widget`}
         className={`ios-widget ${dragging || grabbed || resizing ? 'dragging' : ''} ${className}`}
         style={{
           left: rect.x,
@@ -281,18 +279,32 @@ export default function Widget({
 
         <div className="ios-widget-content">{children}</div>
 
-        {/* Resize handles */}
+{/* Resize handles */}
         {onResize && resizeHandles.map(handle => (
-          <div
+          <button
+            type="button"
             key={handle}
+            aria-label={`Resize ${title} widget from ${handle} corner`}
             className={`widget-resize-handle widget-resize-${handle}`}
             onPointerDown={(e) => onResizePointerDown(e, handle)}
             onPointerMove={onResizePointerMove}
             onPointerUp={onResizePointerUp}
             onPointerCancel={onResizePointerCancel}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                // Could implement keyboard resize here if needed
+              }
+            }}
             style={{
               position: 'absolute',
               zIndex: 10,
+              border: 'none',
+              padding: 0,
+              background: 'rgba(99, 102, 241, 0.8)',
+              borderRadius: 2,
+              opacity: 0,
+              transition: 'opacity 0.2s',
               ...(handle.includes('n') && { top: -4 }),
               ...(handle.includes('s') && { bottom: -4 }),
               ...(handle.includes('e') && { right: -4 }),
@@ -320,17 +332,13 @@ export default function Widget({
                 width: 12,
                 height: 12,
                 cursor: 'nwse-resize'
-              }),
-              backgroundColor: 'rgba(99, 102, 241, 0.8)',
-              borderRadius: 2,
-              opacity: 0,
-              transition: 'opacity 0.2s'
+              })
             }}
             onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
             onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
           />
         ))}
-      </div>
+      </article>
     </>
   );
 }

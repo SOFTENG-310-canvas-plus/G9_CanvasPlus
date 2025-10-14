@@ -59,69 +59,112 @@ export default function App() {
     return <div style={{ padding: 20 }}>Loading dashboard...</div>;
   }
 
-  return (
-    <>
-      <WidgetGrid 
-        cols={currentBreakpoint === 'lg' ? 17 : currentBreakpoint === 'md' ? 10 : currentBreakpoint === 'sm' ? 6 : 4} 
-        rows={8} 
-        cellW={96} 
-        rowH={96} 
-        gap={16} 
-        showGrid
-        onResetLayout={resetLayout}
-      >
-        {layout.map((w) => (
-          <Widget
-            key={w.id}
-            id={w.id}
-            title={w.title || w.id}
-            col={w.col}
-            row={w.row}
-            w={w.w}
-            h={w.h}
-            minW={w.minW}
-            minH={w.minH}
-            maxW={w.maxW}
-            maxH={w.maxH}
-            color={w.color}
-            zIndex={zIndexMap[w.id] || 1}
-            onMove={handleMove}
-            onResize={handleResize}
-            onBringToFront={handleBringToFront}
-          >
-            {w.id === "weather" && <WeatherWidget />}
-            {w.id === "search" && <SearchWidget />}
-            {w.id === "clock" && <ClockWidget />}
-            {w.id === "gptWrapper" && <GptWrapper />}
-            {w.id === "calendar" && (
-              calLoading ? (
-                <div>Loading events...</div>
-              ) : needsAuth ? (
-                <div>
-                  <button onClick={signIn} style={{
-                    background: '#6366f1', color: 'white', border: 'none', borderRadius: 8, padding: '8px 18px', fontWeight: 600, fontSize: 15, cursor: 'pointer', marginTop: 8
-                  }}>Sign in to Google Calendar</button>
-                </div>
-              ) : error ? (
-                <div style={{ color: 'salmon' }}>Error: {error}</div>
-              ) : (!events || events.length === 0) ? (
-                <div>No upcoming events</div>
-              ) : (
-                <ul style={{ margin: 0, paddingLeft: 16 }}>
-                  {events.map(ev => (
-                    <li key={ev.id}>{ev.summary || '(no title)'} ({ev.start?.dateTime?.slice(11, 16) || ev.start?.date})</li>
-                  ))}
-                </ul>
-              )
-            )}
+const SIGN_IN_BUTTON_STYLE = {
+  background: '#6366f1',
+  color: 'white',
+  border: 'none',
+  borderRadius: 8,
+  padding: '8px 18px',
+  fontWeight: 600,
+  fontSize: 15,
+  cursor: 'pointer',
+  marginTop: 8
+};
 
-            {w.id === "todo" && <TodoWidget />}
-            {w.id === "canvas" && <CanvasWidget />}
-            {w.id === "schedule" && <DailyScheduleWidget />}
-            {w.id === "notes" && <NotesWidget />}
-          </Widget>
-        ))}
-      </WidgetGrid>
-    </>
+// Extract calendar content into separate component
+const CalendarWidgetContent = ({ calLoading, needsAuth, error, events, signIn }) => {
+  if (calLoading) {
+    return <div>Loading events...</div>;
+  }
+
+  if (needsAuth) {
+    return (
+      <div>
+        <button onClick={signIn} style={SIGN_IN_BUTTON_STYLE}>
+          Sign in to Google Calendar
+        </button>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div style={{ color: 'salmon' }}>Error: {error}</div>;
+  }
+
+  if (!events || events.length === 0) {
+    return <div>No upcoming events</div>;
+  }
+
+  return (
+    <ul style={{ margin: 0, paddingLeft: 16 }}>
+      {events.map(ev => (
+        <li key={ev.id}>
+          {ev.summary || '(no title)'} ({ev.start?.dateTime?.slice(11, 16) || ev.start?.date})
+        </li>
+      ))}
+    </ul>
   );
+};
+
+// Your main return statement
+let cols;
+if (currentBreakpoint === 'lg') {
+  cols = 17;
+} else if (currentBreakpoint === 'md') {
+  cols = 10;
+} else if (currentBreakpoint === 'sm') {
+  cols = 6;
+} else {
+  cols = 4;
+}
+return (
+  <WidgetGrid 
+    cols={cols}
+    rows={8} 
+    cellW={96} 
+    rowH={96} 
+    gap={16} 
+    showGrid
+    onResetLayout={resetLayout}
+  >
+    {layout.map((w) => (
+      <Widget
+        key={w.id}
+        id={w.id}
+        title={w.title || w.id}
+        col={w.col}
+        row={w.row}
+        w={w.w}
+        h={w.h}
+        minW={w.minW}
+        minH={w.minH}
+        maxW={w.maxW}
+        maxH={w.maxH}
+        color={w.color}
+        zIndex={zIndexMap[w.id] || 1}
+        onMove={handleMove}
+        onResize={handleResize}
+        onBringToFront={handleBringToFront}
+      >
+        {w.id === "weather" && <WeatherWidget />}
+        {w.id === "search" && <SearchWidget />}
+        {w.id === "clock" && <ClockWidget />}
+        {w.id === "gptWrapper" && <GptWrapper />}
+        {w.id === "calendar" && (
+          <CalendarWidgetContent 
+            calLoading={calLoading}
+            needsAuth={needsAuth}
+            error={error}
+            events={events}
+            signIn={signIn}
+          />
+        )}
+        {w.id === "todo" && <TodoWidget />}
+        {w.id === "canvas" && <CanvasWidget />}
+        {w.id === "schedule" && <DailyScheduleWidget />}
+        {w.id === "notes" && <NotesWidget />}
+      </Widget>
+    ))}
+  </WidgetGrid>
+);
 }

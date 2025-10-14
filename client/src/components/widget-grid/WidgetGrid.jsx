@@ -159,22 +159,22 @@ export default function WidgetGrid({
 
   const handleWallpaperUpload = (e) => {
     const file = e.target.files?.[0];
-    if (file && file.type.match("image.*")) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const img = ev.target.result;
-        setWallpaper(img);
-        if (user && hydratedRef.current) {
-          debouncedSave({
-            userId: user.id,
-            themeColor: widgetColor,
-            backgroundType: "image",
-            backgroundValue: img,
-          });
-        }
-      };
-      reader.readAsDataURL(file);
+    if (file?.type.match("image.*")) {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = ev.target.result;
+    setWallpaper(img);
+    if (user?.id && hydratedRef.current) {
+      debouncedSave({
+        userId: user.id,
+        themeColor: widgetColor,
+        backgroundType: "image",
+        backgroundValue: img,
+      });
     }
+  };
+  reader.readAsDataURL(file);
+};
   };
 
   const handleColorChange = (e) => {

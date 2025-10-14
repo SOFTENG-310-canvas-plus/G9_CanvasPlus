@@ -1,4 +1,3 @@
-// client/src/hooks/useWidgetLayout.js
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../auth/supabaseClient.js';
 
@@ -17,7 +16,6 @@ const WIDGET_CONSTRAINTS = {
   canvas: { minW: 2, minH: 3, maxW: 6, maxH: 8 },
 };
 
-// Default layouts per breakpoint
 const DEFAULT_LAYOUTS = {
   lg: [
     { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2, minW: 2, minH: 2 },

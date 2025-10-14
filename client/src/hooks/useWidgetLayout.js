@@ -16,6 +16,9 @@ const WIDGET_CONSTRAINTS = {
   canvas: { minW: 2, minH: 3, maxW: 6, maxH: 8 },
 };
 
+// Time to debounce layout saves
+const BOUNCE_TIME = 800; // ms
+
 const DEFAULT_LAYOUTS = {
   lg: [
     { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2, minW: 2, minH: 2 },
@@ -105,42 +108,42 @@ export default function useWidgetLayout(user) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Load layouts from Supabase
-  useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      hydratedRef.current = true;
-      return;
-    }
+ // Load layouts from Supabase
+useEffect(() => {
+  if (!user) {
+    // Don't set loading to false here
+    hydratedRef.current = false;
+    return;
+  }
 
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from('widget_layouts')
-          .select('*')
-          .eq('user_id', user.id);
+  (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('widget_layouts')
+        .select('*')
+        .eq('user_id', user.id);
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error loading layouts:', error);
-        }
-
-        if (data && data.length > 0) {
-          const loadedLayouts = { ...DEFAULT_LAYOUTS };
-          data.forEach(row => {
-            if (row.breakpoint && row.layout) {
-              loadedLayouts[row.breakpoint] = row.layout;
-            }
-          });
-          setLayouts(loadedLayouts);
-        }
-      } catch (err) {
-        console.error('Error loading layouts:', err);
-      } finally {
-        setLoading(false);
-        hydratedRef.current = true;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading layouts:', error);
       }
-    })();
-  }, [user]);
+
+      if (data && data.length > 0) {
+        const loadedLayouts = { ...DEFAULT_LAYOUTS };
+        data.forEach(row => {
+          if (row.breakpoint && row.layout) {
+            loadedLayouts[row.breakpoint] = row.layout;
+          }
+        });
+        setLayouts(loadedLayouts);
+      }
+    } catch (err) {
+      console.error('Error loading layouts:', err);
+    } finally {
+      setLoading(false);  // Only set false AFTER user data loads
+      hydratedRef.current = true;
+    }
+  })();
+}, [user]);
 
   // Save layout for specific breakpoint
   const saveLayout = useCallback(
@@ -176,7 +179,7 @@ export default function useWidgetLayout(user) {
   useEffect(() => {
     debouncedSaveRef.current = debounce((bp, items) => {
       saveLayout(bp, items);
-    }, 800);
+    }, BOUNCE_TIME);
   }, [saveLayout]);
 
   // Update layout for current breakpoint

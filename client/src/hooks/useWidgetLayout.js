@@ -111,7 +111,7 @@ export default function useWidgetLayout(user) {
  // Load layouts from Supabase
 useEffect(() => {
   if (!user) {
-    // Don't set loading to false here
+    setLayouts(DEFAULT_LAYOUTS);
     hydratedRef.current = false;
     return;
   }
@@ -139,7 +139,7 @@ useEffect(() => {
     } catch (err) {
       console.error('Error loading layouts:', err);
     } finally {
-      setLoading(false);  // Only set false AFTER user data loads
+      setLoading(false);  // Only set false AFTER user data loads, this is to avoid any flash of default layout when refreshed
       hydratedRef.current = true;
     }
   })();

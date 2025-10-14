@@ -1,108 +1,162 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../auth/supabaseClient';
+// client/src/hooks/useWidgetLayout.js
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { supabase } from '../auth/supabaseClient.js';
 
+// ============================================
+// WIDGET SIZE CONSTRAINTS - EDIT HERE
+// ============================================
+const WIDGET_CONSTRAINTS = {
+  weather: { minW: 2, minH: 2, maxW: 4, maxH: 4 },
+  clock: { minW: 3, minH: 1, maxW: 8, maxH: 3 },
+  calendar: { minW: 3, minH: 3, maxW: 8, maxH: 6 },
+  todo: { minW: 2, minH: 3, maxW: 5, maxH: 8 },
+  schedule: { minW: 3, minH: 3, maxW: 6, maxH: 8 },
+  notes: { minW: 2, minH: 2, maxW: 6, maxH: 6 },
+  gptWrapper: { minW: 4, minH: 3, maxW: 10, maxH: 8 },
+  search: { minW: 2, minH: 1, maxW: 8, maxH: 2 },
+  canvas: { minW: 2, minH: 3, maxW: 6, maxH: 8 },
+};
 
-
-// This js file manages the widget layouts for different screen sizes (breakpoints)
-// It loads/saves layouts from/to Supabase and provides functions to handle layout changes and resets.
-
+// Default layouts per breakpoint
 const DEFAULT_LAYOUTS = {
   lg: [
-    { i: 'calendar', x: 0, y: 0, w: 6, h: 4, minW: 4, minH: 4 },
-    { i: 'todo', x: 6, y: 0, w: 6, h: 4, minW: 3, minH: 3 },
-    { i: 'weather', x: 0, y: 4, w: 4, h: 3, minW: 3, minH: 2 },
-    { i: 'gpt', x: 4, y: 4, w: 8, h: 3, minW: 4, minH: 3 },
+    { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2, minW: 2, minH: 2 },
+    { id: "clock", title: "Clock", col: 0, row: 5, w: 5, h: 2, minW: 3, minH: 1 },
+    { id: "calendar", title: "Calendar", col: 3, row: 0, w: 4, h: 3, minW: 4, minH: 3 },
+    { id: "todo", title: "TODO List", col: 7, row: 0, w: 3, h: 4, minW: 3, minH: 3 },
+    { id: "schedule", title: "Daily Schedule", col: 10, row: 0, w: 4, h: 4, minW: 3, minH: 3 },
+    { id: "notes", title: "Notes", col: 0, row: 2, w: 3, h: 3, minW: 2, minH: 2 },
+    { id: "gptWrapper", title: "ChatGPT", col: 3, row: 4, w: 6, h: 3, minW: 4, minH: 3 },
+    { id: "search", title: "Search", col: 7, row: 0, w: 4, h: 1, minW: 3, minH: 1 },
+    { id: "canvas", title: "Canvas Tasks", col: 9, row: 3, w: 3, h: 4, minW: 3, minH: 3 },
   ],
   md: [
-    { i: 'calendar', x: 0, y: 0, w: 5, h: 4, minW: 4, minH: 4 },
-    { i: 'todo', x: 5, y: 0, w: 5, h: 4, minW: 3, minH: 3 },
-    { i: 'weather', x: 0, y: 4, w: 5, h: 3, minW: 3, minH: 2 },
-    { i: 'gpt', x: 5, y: 4, w: 5, h: 3, minW: 4, minH: 3 },
+    { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2, minW: 2, minH: 2 },
+    { id: "clock", title: "Clock", col: 0, row: 5, w: 4, h: 2, minW: 3, minH: 1 },
+    { id: "calendar", title: "Calendar", col: 2, row: 0, w: 4, h: 3, minW: 3, minH: 3 },
+    { id: "todo", title: "TODO List", col: 6, row: 0, w: 3, h: 4, minW: 2, minH: 3 },
+    { id: "schedule", title: "Daily Schedule", col: 0, row: 7, w: 4, h: 4, minW: 3, minH: 3 },
+    { id: "notes", title: "Notes", col: 0, row: 2, w: 2, h: 3, minW: 2, minH: 2 },
+    { id: "gptWrapper", title: "ChatGPT", col: 2, row: 3, w: 5, h: 3, minW: 4, minH: 3 },
+    { id: "search", title: "Search", col: 6, row: 0, w: 3, h: 1, minW: 2, minH: 1 },
+    { id: "canvas", title: "Canvas Tasks", col: 4, row: 7, w: 3, h: 4, minW: 2, minH: 3 },
   ],
   sm: [
-    { i: 'calendar', x: 0, y: 0, w: 6, h: 4, minW: 4, minH: 4 },
-    { i: 'todo', x: 0, y: 4, w: 6, h: 4, minW: 3, minH: 3 },
-    { i: 'weather', x: 0, y: 8, w: 6, h: 3, minW: 3, minH: 2 },
-    { i: 'gpt', x: 0, y: 11, w: 6, h: 3, minW: 4, minH: 3 },
+    { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2, minW: 2, minH: 2 },
+    { id: "clock", title: "Clock", col: 0, row: 8, w: 3, h: 2, minW: 2, minH: 1 },
+    { id: "calendar", title: "Calendar", col: 0, row: 2, w: 3, h: 3, minW: 2, minH: 3 },
+    { id: "todo", title: "TODO List", col: 3, row: 0, w: 3, h: 4, minW: 2, minH: 3 },
+    { id: "schedule", title: "Daily Schedule", col: 0, row: 10, w: 3, h: 4, minW: 2, minH: 3 },
+    { id: "notes", title: "Notes", col: 3, row: 4, w: 3, h: 3, minW: 2, minH: 2 },
+    { id: "gptWrapper", title: "ChatGPT", col: 0, row: 5, w: 4, h: 3, minW: 3, minH: 3 },
+    { id: "search", title: "Search", col: 2, row: 0, w: 2, h: 1, minW: 2, minH: 1 },
+    { id: "canvas", title: "Canvas Tasks", col: 3, row: 7, w: 3, h: 3, minW: 2, minH: 3 },
   ],
   xs: [
-    { i: 'calendar', x: 0, y: 0, w: 4, h: 4, minW: 4, minH: 4 },
-    { i: 'todo', x: 0, y: 4, w: 4, h: 4, minW: 3, minH: 3 },
-    { i: 'weather', x: 0, y: 8, w: 4, h: 3, minW: 3, minH: 2 },
-    { i: 'gpt', x: 0, y: 11, w: 4, h: 3, minW: 4, minH: 3 },
+    { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2, minW: 2, minH: 2 },
+    { id: "clock", title: "Clock", col: 0, row: 10, w: 2, h: 2, minW: 2, minH: 1 },
+    { id: "calendar", title: "Calendar", col: 0, row: 2, w: 2, h: 3, minW: 2, minH: 3 },
+    { id: "todo", title: "TODO List", col: 2, row: 0, w: 2, h: 4, minW: 2, minH: 3 },
+    { id: "schedule", title: "Daily Schedule", col: 0, row: 12, w: 2, h: 4, minW: 2, minH: 3 },
+    { id: "notes", title: "Notes", col: 2, row: 4, w: 2, h: 3, minW: 2, minH: 2 },
+    { id: "gptWrapper", title: "ChatGPT", col: 0, row: 5, w: 3, h: 3, minW: 2, minH: 3 },
+    { id: "search", title: "Search", col: 0, row: 0, w: 2, h: 1, minW: 2, minH: 1 },
+    { id: "canvas", title: "Canvas Tasks", col: 2, row: 7, w: 2, h: 3, minW: 2, minH: 3 },
   ],
 };
 
-export function useWidgetLayout() {
+const BREAKPOINTS = {
+  lg: 1200,
+  md: 996,
+  sm: 768,
+  xs: 480,
+};
+
+function getCurrentBreakpoint(width) {
+  if (width >= BREAKPOINTS.lg) return 'lg';
+  if (width >= BREAKPOINTS.md) return 'md';
+  if (width >= BREAKPOINTS.sm) return 'sm';
+  return 'xs';
+}
+
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  };
+}
+
+export default function useWidgetLayout(user) {
   const [layouts, setLayouts] = useState(DEFAULT_LAYOUTS);
-  const [user, setUser] = useState(null);
+  const [currentBreakpoint, setCurrentBreakpoint] = useState(() =>
+    getCurrentBreakpoint(window.innerWidth)
+  );
   const [loading, setLoading] = useState(true);
-  const [saveTimeout, setSaveTimeout] = useState(null);
+  const hydratedRef = useRef(false);
+  const debouncedSaveRef = useRef(null);
 
+  // Detect breakpoint changes
   useEffect(() => {
-    async function init() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
+    const handleResize = debounce(() => {
+      const bp = getCurrentBreakpoint(window.innerWidth);
+      setCurrentBreakpoint(bp);
+    }, 150);
 
-        if (user) {
-          await loadLayouts(user.id);
-        }
-      } catch (error) {
-        console.error('Error initializing layout:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    init();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const loadLayouts = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('widget_layouts')
-        .select('breakpoint, items')
-        .eq('user_id', userId);
-
-      if (error) {
-        console.error('Error loading layouts:', error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        const loadedLayouts = { ...DEFAULT_LAYOUTS };
-        
-        data.forEach((layout) => {
-          loadedLayouts[layout.breakpoint] = layout.items;
-        });
-
-        setLayouts(loadedLayouts);
-      }
-    } catch (error) {
-      console.error('Error loading layouts:', error);
-    }
-  };
-
-  const saveLayout = useCallback(async (breakpoint, items) => {
+  // Load layouts from Supabase
+  useEffect(() => {
     if (!user) {
-      console.warn('Cannot save layout: user not logged in');
+      setLoading(false);
+      hydratedRef.current = true;
       return;
     }
 
-    if (saveTimeout) {
-      clearTimeout(saveTimeout);
-    }
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('widget_layouts')
+          .select('*')
+          .eq('user_id', user.id);
 
-    const timeout = setTimeout(async () => {
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error loading layouts:', error);
+        }
+
+        if (data && data.length > 0) {
+          const loadedLayouts = { ...DEFAULT_LAYOUTS };
+          data.forEach(row => {
+            if (row.breakpoint && row.layout) {
+              loadedLayouts[row.breakpoint] = row.layout;
+            }
+          });
+          setLayouts(loadedLayouts);
+        }
+      } catch (err) {
+        console.error('Error loading layouts:', err);
+      } finally {
+        setLoading(false);
+        hydratedRef.current = true;
+      }
+    })();
+  }, [user]);
+
+  // Save layout for specific breakpoint
+  const saveLayout = useCallback(
+    async (breakpoint, items) => {
+      if (!user || !hydratedRef.current) return;
+
       try {
         const { error } = await supabase
           .from('widget_layouts')
           .upsert(
             {
               user_id: user.id,
-              breakpoint: breakpoint,
-              items: items,
+              breakpoint,
+              layout: items,
               updated_at: new Date().toISOString(),
             },
             {
@@ -112,28 +166,40 @@ export function useWidgetLayout() {
 
         if (error) {
           console.error('Error saving layout:', error);
-        } else {
-          console.log(`Layout saved for breakpoint: ${breakpoint}`);
         }
-      } catch (error) {
-        console.error('Error saving layout:', error);
+      } catch (err) {
+        console.error('Error saving layout:', err);
       }
+    },
+    [user]
+  );
+
+  // Create debounced save function
+  useEffect(() => {
+    debouncedSaveRef.current = debounce((bp, items) => {
+      saveLayout(bp, items);
     }, 800);
-
-    setSaveTimeout(timeout);
-  }, [user, saveTimeout]);
-
-  const handleLayoutChange = useCallback((newLayout, allLayouts) => {
-    setLayouts(allLayouts);
-
-    Object.keys(allLayouts).forEach((breakpoint) => {
-      saveLayout(breakpoint, allLayouts[breakpoint]);
-    });
   }, [saveLayout]);
 
+  // Update layout for current breakpoint
+  const updateLayout = useCallback(
+    (updatedItems) => {
+      setLayouts(prev => ({
+        ...prev,
+        [currentBreakpoint]: updatedItems,
+      }));
+      
+      if (debouncedSaveRef.current) {
+        debouncedSaveRef.current(currentBreakpoint, updatedItems);
+      }
+    },
+    [currentBreakpoint]
+  );
+
+  // Reset to default layouts
   const resetLayout = useCallback(async () => {
     setLayouts(DEFAULT_LAYOUTS);
-
+    
     if (!user) return;
 
     try {
@@ -144,19 +210,18 @@ export function useWidgetLayout() {
 
       if (error) {
         console.error('Error resetting layout:', error);
-      } else {
-        console.log('Layout reset to defaults');
       }
-    } catch (error) {
-      console.error('Error resetting layout:', error);
+    } catch (err) {
+      console.error('Error resetting layout:', err);
     }
   }, [user]);
 
   return {
-    layouts,
+    layout: layouts[currentBreakpoint] || DEFAULT_LAYOUTS.lg,
+    allLayouts: layouts,
+    currentBreakpoint,
     loading,
-    handleLayoutChange,
+    updateLayout,
     resetLayout,
-    isLoggedIn: !!user,
   };
 }

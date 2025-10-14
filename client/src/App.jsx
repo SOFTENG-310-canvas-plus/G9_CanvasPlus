@@ -1,69 +1,100 @@
-// =============================
-// File: app.jsx
-// =============================
-
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import WidgetGrid, { Widget } from "./components/WidgetGrid.jsx";
 import useGoogleCalendarEvents from "./hooks/useGoogleCalendarEvents";
+import useWidgetLayout from "./hooks/useWidgetLayout";
+import { supabase } from "./auth/supabaseClient.js";
 
-import WeatherWidget from "./components/WeatherWidget.jsx"
-import GptWrapper from "./components/GptWrapper.jsx"
+import WeatherWidget from "./components/WeatherWidget.jsx";
+import GptWrapper from "./components/GptWrapper.jsx";
 import ClockWidget from "./components/ClockWidget.jsx";
-import SearchWidget from "./components/SearchWidget.jsx"
+import SearchWidget from "./components/SearchWidget.jsx";
 import DailyScheduleWidget from "./components/DailyScheduleWidget.jsx";
 import TodoWidget from "./components/TodoWidget.jsx";
 import NotesWidget from './components/NotesWidget';
 import CanvasWidget from "./components/CanvasWidget.jsx";
 
-
 export default function App() {
-  const [widgets, setWidgets] = useState([
-       { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2 },
-    { id: "clock", title: "Clock", col: 0, row: 5, w: 5, h: 2},
-    { id: "calendar", title: "Calendar", col: 3, row: 0, w: 4, h: 3},
-    { id: "todo", title: "TODO List", col: 7, row: 0, w: 3, h: 4 },
-    { id: "schedule", title: "Daily Schedule", col: 10, row: 0, w: 4, h: 4.2 },
-    { id: "notes", title: "Notes", col: 0, row: 2, w: 3, h: 3 },
-    { id: "gptWrapper", title: "ChatGPTWrapper", col: 3, row: 4, w: 6, h: 3 },
-    { id: "search", title: "Search", col: 7, row: 0, w: 4, h: 1 },
-    { id: "canvas", title: "Canvas Tasks", col: 9, row: 3, w: 3, h: 4 },
+  const [user, setUser] = useState(null);
+  const [zIndexMap, setZIndexMap] = useState({});
+  const [maxZIndex, setMaxZIndex] = useState(1);
 
-  ]);
-
-  const handleMove = useCallback((id, pos) => {
-    setWidgets((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, col: pos.col, row: pos.row } : w))
-    );
+  // Auth
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user || null);
+    });
+    supabase.auth.getUser().then(({ data }) => setUser(data?.user || null));
+    return () => sub?.subscription?.unsubscribe?.();
   }, []);
 
-  // Hook must be called at component top-level
-  const { events, loading, error, needsAuth, signIn } = useGoogleCalendarEvents();
+  // Layout management
+  const { layout, loading, updateLayout, resetLayout, currentBreakpoint } = useWidgetLayout(user);
+
+  // Calendar hook
+  const { events, loading: calLoading, error, needsAuth, signIn } = useGoogleCalendarEvents();
+
+  const handleMove = useCallback((id, pos) => {
+    const updated = layout.map((w) =>
+      w.id === id ? { ...w, col: pos.col, row: pos.row } : w
+    );
+    updateLayout(updated);
+  }, [layout, updateLayout]);
+
+  const handleResize = useCallback((id, dimensions) => {
+    const updated = layout.map((w) =>
+      w.id === id ? { ...w, ...dimensions } : w
+    );
+    updateLayout(updated);
+  }, [layout, updateLayout]);
+
+  const handleBringToFront = useCallback((id) => {
+    setMaxZIndex(prev => {
+      const newMax = prev + 1;
+      setZIndexMap(prevMap => ({ ...prevMap, [id]: newMax }));
+      return newMax;
+    });
+  }, []);
+
+  if (loading) {
+    return <div style={{ padding: 20 }}>Loading dashboard...</div>;
+  }
 
   return (
     <>
-
-      {/* Add button row (if you want a global add, otherwise move this to widgets) */}
-
-
-      <WidgetGrid cols={17} rows={8} cellW={96} rowH={96} gap={16} showGrid>
-        {widgets.map((w) => (
+      <WidgetGrid 
+        cols={currentBreakpoint === 'lg' ? 17 : currentBreakpoint === 'md' ? 10 : currentBreakpoint === 'sm' ? 6 : 4} 
+        rows={8} 
+        cellW={96} 
+        rowH={96} 
+        gap={16} 
+        showGrid
+        onResetLayout={resetLayout}
+      >
+        {layout.map((w) => (
           <Widget
             key={w.id}
             id={w.id}
-            title={w.title}
+            title={w.title || w.id}
             col={w.col}
             row={w.row}
             w={w.w}
             h={w.h}
+            minW={w.minW}
+            minH={w.minH}
+            maxW={w.maxW}
+            maxH={w.maxH}
             color={w.color}
+            zIndex={zIndexMap[w.id] || 1}
             onMove={handleMove}
+            onResize={handleResize}
+            onBringToFront={handleBringToFront}
           >
             {w.id === "weather" && <WeatherWidget />}
             {w.id === "search" && <SearchWidget />}
             {w.id === "clock" && <ClockWidget />}
             {w.id === "gptWrapper" && <GptWrapper />}
             {w.id === "calendar" && (
-              loading ? (
+              calLoading ? (
                 <div>Loading events...</div>
               ) : needsAuth ? (
                 <div>

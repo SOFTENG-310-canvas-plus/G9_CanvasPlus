@@ -127,7 +127,7 @@ export default function App() {
       cellW={96} 
       rowH={96} 
       gap={16} 
-      showGrid
+      showGrid={false}
       onResetLayout={resetLayout}
     >
       {layout.map((w) => (

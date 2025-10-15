@@ -34,6 +34,7 @@ export default function WidgetGrid({
                                      className = "",
                                      style = {},
                                      children,
+                                     onResetLayout,
                                    }) {
   const containerRef = useRef(null);
   const clipRef = useRef(null);

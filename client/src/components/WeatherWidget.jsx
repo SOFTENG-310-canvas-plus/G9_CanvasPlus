@@ -181,14 +181,13 @@ export default function WeatherWidget() {
                 </div>
             </div>
 
-            {/* Center: large symbol and temperature */}
             {/* CENTER: emoji */}
             <div
                 style={{
                     position: "absolute",
                     left: "50%",
                     top: "40%",
-                    transform: "translate(-50%, -50%)", // perfect center
+                    transform: "translate(-50%, -50%)",
                     lineHeight: 0,
                 }}
             >
@@ -201,7 +200,7 @@ export default function WeatherWidget() {
                 </span>
             </div>
 
-            {/* BOTTOM: temperature (sits between bottom edge and the emoji) */}
+            {/* BOTTOM: temperature */}
             <div
                 style={{
                     position: "absolute",

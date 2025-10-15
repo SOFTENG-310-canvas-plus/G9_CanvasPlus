@@ -1,22 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../auth/supabaseClient';
+import React, { useState, useEffect } from "react";
+import { supabase } from "../auth/supabaseClient";
 
 export default function NotesWidget() {
   const [notes, setNotes] = useState([]);
-  const [newNote, setNewNote] = useState('');
+  const [newNote, setNewNote] = useState("");
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editContent, setEditContent] = useState("");
 
+  // Check logged in user and fetch notes
+  // Currently Delete/Add/Edit are available when logged in
   useEffect(() => {
-    const checkUser = async () => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    try {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      
       if (user) {
         fetchNotes(user.id);
       }
-    };
-    checkUser();
-  }, []);
+    } catch (error) {
+      console.error("Error checking user:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchNotes = async (userId) => {
     try {
@@ -62,49 +75,101 @@ export default function NotesWidget() {
     }
   };
 
-  const deleteNote = async (id) => {
+  const updateNote = async (noteId, newContent) => {
+    try {
+      const { error } = await supabase
+        .from("Notes")
+        .update({ content: newContent.trim(), updated_at: new Date().toISOString() })
+        .eq("id", noteId);
+
+      if (error) {
+        console.error("Error updating note:", error);
+      } else {
+        setNotes(notes.map(note => 
+          note.id === noteId 
+            ? { ...note, content: newContent.trim(), updated_at: new Date().toISOString() }
+            : note
+        ));
+        setEditingId(null);
+        setEditContent("");
+      }
+    } catch (error) {
+      console.error("Error updating note:", error);
+    }
+  };
+
+  const startEdit = (note) => {
+    setEditingId(note.id);
+    setEditContent(note.content);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditContent("");
+  };
+
+  const deleteNote = async (noteId) => {
     try {
       const { error } = await supabase
         .from("Notes")
         .delete()
-        .eq("id", id);
+        .eq("id", noteId);
 
       if (error) {
         console.error("Error deleting note:", error);
       } else {
-        setNotes(notes.filter(note => note.id !== id));
+        setNotes(notes.filter(note => note.id !== noteId));
       }
     } catch (error) {
       console.error("Error deleting note:", error);
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.ctrlKey && e.key === 'Enter') {
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) {
       saveNote();
     }
   };
 
+  // From here, code below is styling and rendering
+  if (loading) {
+    return (
+      <div style={{ 
+        color: "black", 
+        opacity: 0.7, 
+        padding: 'clamp(8px, 2vw, 12px)',
+        fontSize: 'clamp(12px, 2.5vw, 14px)',
+      }}>
+        Loading notes...
+      </div>
+    );
+  }
+
+  // Assume user is logged in to access widgets
   if (!user) {
     return (
-      <div style={{ padding: 'var(--space-4)' }}>
+      <div style={{ 
+        padding: 'clamp(8px, 2vw, 12px)',
+        boxSizing: 'border-box',
+      }}>
         <label style={{ 
           display: "block", 
-          fontSize: 'var(--font-xs)', 
+          fontSize: 'clamp(11px, 2vw, 12px)', 
           opacity: 0.7, 
-          marginBottom: 'var(--space-2)' 
+          marginBottom: 'clamp(4px, 1vw, 6px)' 
         }}>
           Quick note
         </label>
         <div style={{ 
           color: "white", 
           opacity: 0.7, 
-          padding: 'var(--space-3)',
+          padding: 'clamp(8px, 2vw, 12px)',
           textAlign: "center",
           border: "1px solid rgba(255,255,255,0.12)",
           borderRadius: 8,
           background: "rgba(255,255,255,0.06)",
-          fontSize: 'var(--font-sm)',
+          fontSize: 'clamp(12px, 2.5vw, 13px)',
+          wordWrap: 'break-word',
         }}>
           Please log in to use notes
         </div>
@@ -113,12 +178,16 @@ export default function NotesWidget() {
   }
 
   return (
-    <div style={{ padding: 'var(--space-2)' }}>
+    <div style={{
+      padding: 'clamp(8px, 2vw, 12px)',
+      boxSizing: 'border-box',
+      width: '100%',
+    }}>
       <label style={{ 
         display: "block", 
-        fontSize: 'var(--font-xs)', 
+        fontSize: 'clamp(11px, 2vw, 12px)', 
         opacity: 0.7, 
-        marginBottom: 'var(--space-2)' 
+        marginBottom: 'clamp(4px, 1vw, 6px)' 
       }}>
         Quick note
       </label>
@@ -126,31 +195,25 @@ export default function NotesWidget() {
       <textarea
         value={newNote}
         onChange={(e) => setNewNote(e.target.value)}
-        onKeyDown={handleKeyDown}
+        onKeyDown={handleKeyPress}
         rows={6}
         placeholder="Type here… (Ctrl+Enter to save)"
         disabled={saving}
         style={{
           width: "100%",
-          padding: 'var(--space-3)',
-          fontSize: 'var(--font-sm)',
+          padding: 'clamp(8px, 2vw, 10px)',
           borderRadius: 8,
-          border: "1px solid rgba(255,255,255,0.15)",
-          background: "rgba(255,255,255,0.08)",
-          color: "#fff",
-          resize: "vertical",
-          fontFamily: "inherit",
+          border: "1px solid rgba(255,255,255,0.12)",
+          background: saving ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.06)",
+          color: "black",
           outline: "none",
-          transition: "border-color 0.2s, background 0.2s",
-          boxSizing: "border-box",
-        }}
-        onFocus={(e) => {
-          e.target.style.borderColor = "rgba(255,255,255,0.25)";
-          e.target.style.background = "rgba(255,255,255,0.12)";
-        }}
-        onBlur={(e) => {
-          e.target.style.borderColor = "rgba(255,255,255,0.15)";
-          e.target.style.background = "rgba(255,255,255,0.08)";
+          resize: "vertical",
+          opacity: saving ? 0.6 : 1,
+          fontSize: 'clamp(12px, 2.5vw, 13px)',
+          boxSizing: 'border-box',
+          minHeight: 44,
+          lineHeight: 1.5,
+          fontFamily: 'inherit',
         }}
       />
       
@@ -158,106 +221,231 @@ export default function NotesWidget() {
         onClick={saveNote}
         disabled={!newNote.trim() || saving}
         style={{
-          marginTop: 'var(--space-2)',
-          padding: 'var(--space-2) var(--space-4)',
-          fontSize: 'var(--font-sm)',
-          fontWeight: 600,
+          marginTop: 'clamp(6px, 1.5vw, 8px)',
+          padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 12px)',
           borderRadius: 6,
-          border: "none",
-          background: saving ? "#555" : "#6366f1",
-          color: "#fff",
-          cursor: saving || !newNote.trim() ? "not-allowed" : "pointer",
-          opacity: saving || !newNote.trim() ? 0.5 : 1,
-          transition: "all 0.2s",
-          width: "100%",
-          minHeight: 'var(--touch-target-min)',
+          border: "1px solid rgba(255,255,255,0.12)",
+          background: (newNote.trim() && !saving) ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)",
+          color: "black",
+          cursor: (newNote.trim() && !saving) ? "pointer" : "not-allowed",
+          opacity: (newNote.trim() && !saving) ? 1 : 0.5,
+          fontSize: 'clamp(11px, 2vw, 12px)',
+          width: '100%',
+          minHeight: 44,
+          fontWeight: 500,
+          transition: 'all 0.2s',
+          boxSizing: 'border-box',
         }}
       >
         {saving ? "Saving..." : "Save Note"}
       </button>
 
       {notes.length > 0 && (
-        <div style={{ marginTop: 'var(--space-4)' }}>
-          <h4 style={{ 
-            fontSize: 'var(--font-sm)', 
-            opacity: 0.8, 
-            marginBottom: 'var(--space-2)',
-            color: '#fff',
+        <div style={{ marginTop: 'clamp(12px, 3vw, 16px)' }}>
+          <label style={{ 
+            display: "block", 
+            fontSize: 'clamp(11px, 2vw, 12px)', 
+            opacity: 0.7, 
+            marginBottom: 'clamp(6px, 1.5vw, 8px)' 
           }}>
-            Recent Notes
-          </h4>
-          <ul style={{ 
-            listStyle: "none", 
-            margin: 0, 
-            padding: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--space-2)',
+            Saved notes ({notes.length})
+          </label>
+          
+          <div style={{ 
+            maxHeight: 300, 
+            overflowY: "auto",
+            WebkitOverflowScrolling: 'touch',
           }}>
-            {notes.map(note => (
-              <li
+            {notes.map((note) => (
+              <div 
                 key={note.id}
                 style={{
-                  padding: 'var(--space-3)',
-                  background: "rgba(255,255,255,0.08)",
-                  borderRadius: 8,
+                  padding: 'clamp(8px, 2vw, 10px)',
+                  marginBottom: 'clamp(6px, 1.5vw, 8px)',
+                  borderRadius: 6,
                   border: "1px solid rgba(255,255,255,0.12)",
-                  fontSize: 'var(--font-sm)',
-                  color: '#fff',
-                  position: 'relative',
-                  wordWrap: 'break-word',
-                  overflowWrap: 'break-word',
+                  background: "rgba(255,255,255,0.04)",
+                  boxSizing: 'border-box',
                 }}
               >
-                <div style={{ 
-                  marginBottom: 'var(--space-2)',
-                  paddingRight: 'var(--space-8)',
-                  lineHeight: 'var(--leading-relaxed)',
-                }}>
-                  {note.content}
-                </div>
-                <div style={{ 
-                  fontSize: 'var(--font-xs)', 
-                  opacity: 0.6,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}>
-                  <span>
-                    {new Date(note.created_at).toLocaleString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                  <button
-                    onClick={() => deleteNote(note.id)}
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      color: "#ef4444",
-                      cursor: "pointer",
-                      fontSize: 16,
-                      padding: 'var(--space-1)',
-                      borderRadius: 4,
-                      transition: "background 0.2s",
-                      minWidth: 'var(--touch-target-min)',
-                      minHeight: 'var(--touch-target-min)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.background = "rgba(239,68,68,0.1)"}
-                    onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
-                    title="Delete note"
-                  >
-                    ×
-                  </button>
-                </div>
-              </li>
+                {editingId === note.id ? (
+                  <div>
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      style={{
+                        width: "100%",
+                        minHeight: 60,
+                        padding: 'clamp(6px, 1.5vw, 8px)',
+                        borderRadius: 4,
+                        border: "1px solid rgba(255,255,255,0.2)",
+                        background: "rgba(255,255,255,0.1)",
+                        color: "black",
+                        outline: "none",
+                        resize: "vertical",
+                        marginBottom: 'clamp(4px, 1vw, 6px)',
+                        fontSize: 'clamp(12px, 2.5vw, 13px)',
+                        boxSizing: 'border-box',
+                        lineHeight: 1.5,
+                        fontFamily: 'inherit',
+                      }}
+                    />
+                    <div style={{ 
+                      display: "flex", 
+                      gap: 'clamp(4px, 1vw, 6px)',
+                      flexWrap: 'wrap',
+                    }}>
+                      <button
+                        onClick={() => updateNote(note.id, editContent)}
+                        disabled={!editContent.trim()}
+                        style={{
+                          fontSize: 'clamp(10px, 2vw, 11px)',
+                          padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px)',
+                          borderRadius: 4,
+                          border: "1px solid rgba(100,255,100,0.3)",
+                          background: editContent.trim() ? "rgba(100,255,100,0.1)" : "rgba(100,255,100,0.05)",
+                          color: editContent.trim() ? "#22aa22" : "rgba(170,255,170,0.3)",
+                          cursor: editContent.trim() ? "pointer" : "not-allowed",
+                          minHeight: 44,
+                          minWidth: 44,
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                          boxSizing: 'border-box',
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        style={{
+                          fontSize: 'clamp(10px, 2vw, 11px)',
+                          padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px)',
+                          borderRadius: 4,
+                          border: "1px solid rgba(255,100,100,0.3)",
+                          background: "rgba(255,100,100,0.1)",
+                          color: "#ffaaaa",
+                          cursor: "pointer",
+                          minHeight: 44,
+                          minWidth: 44,
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                          boxSizing: 'border-box',
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ 
+                      color: "black", 
+                      fontSize: 'clamp(12px, 2.5vw, 13px)', 
+                      marginBottom: 'clamp(4px, 1vw, 6px)',
+                      lineHeight: 1.4,
+                      whiteSpace: "pre-wrap",
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
+                    }}>
+                      {note.content}
+                    </div>
+                    
+                    <div style={{ 
+                      display: "flex", 
+                      justifyContent: "space-between", 
+                      alignItems: "center",
+                      gap: 'clamp(6px, 1.5vw, 8px)',
+                      flexWrap: 'wrap',
+                    }}>
+                      <span style={{ 
+                        fontSize: 'clamp(10px, 2vw, 11px)', 
+                        opacity: 0.5, 
+                        color: "black",
+                        wordWrap: 'break-word',
+                      }}>
+                        {new Date(note.created_at).toLocaleString()}
+                        {note.updated_at !== note.created_at && (
+                          <span style={{ fontStyle: "italic" }}> (edited)</span>
+                        )}
+                      </span>
+                      
+                      <div style={{ 
+                        display: "flex", 
+                        gap: 'clamp(4px, 1vw, 6px)',
+                        flexWrap: 'wrap',
+                      }}>
+                        <button
+                          onClick={() => startEdit(note)}
+                          style={{
+                            fontSize: 'clamp(10px, 2vw, 11px)',
+                            padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px)',
+                            borderRadius: 4,
+                            border: "1px solid rgba(100,150,255,0.3)",
+                            background: "rgba(100,150,255,0.1)",
+                            color: "#000000ff",
+                            cursor: "pointer",
+                            minHeight: 44,
+                            minWidth: 44,
+                            fontWeight: 500,
+                            transition: 'all 0.2s',
+                            boxSizing: 'border-box',
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = "rgba(100,150,255,0.2)";
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = "rgba(100,150,255,0.1)";
+                          }}
+                        >
+                          Edit
+                        </button>
+                        
+                        <button
+                          onClick={() => deleteNote(note.id)}
+                          style={{
+                            fontSize: 'clamp(10px, 2vw, 11px)',
+                            padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px)',
+                            borderRadius: 4,
+                            border: "1px solid rgba(255,100,100,0.3)",
+                            background: "rgba(255,100,100,0.1)",
+                            color: "#ffaaaa",
+                            cursor: "pointer",
+                            minHeight: 44,
+                            minWidth: 44,
+                            fontWeight: 500,
+                            transition: 'all 0.2s',
+                            boxSizing: 'border-box',
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.background = "rgba(255,100,100,0.2)";
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.background = "rgba(255,100,100,0.1)";
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
-          </ul>
+          </div>
+        </div>
+      )}
+
+      {notes.length === 0 && (
+        <div style={{ 
+          marginTop: 'clamp(12px, 3vw, 16px)', 
+          padding: 'clamp(10px, 2.5vw, 12px)', 
+          textAlign: "center", 
+          opacity: 0.5, 
+          fontSize: 'clamp(11px, 2vw, 12px)',
+          color: "white",
+          wordWrap: 'break-word',
+        }}>
+          No saved notes yet. Write your first note above
         </div>
       )}
     </div>

@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import WidgetGrid, { Widget } from "./components/WidgetGrid.jsx";
 import useGoogleCalendarEvents from "./hooks/useGoogleCalendarEvents";
-import { useWidgetLayout } from "./hooks/useWidgetLayout.js";
 import { supabase } from "./auth/supabaseClient.js";
 
 import WeatherWidget from "./components/WeatherWidget.jsx"
@@ -18,8 +17,34 @@ import { validateLayout } from './lib/layoutUtils';
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [userLoaded, setUserLoaded] = useState(false);
+  
+  // Get authenticated user FIRST
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user || null);
+      setUserLoaded(true);
+      console.log('User authenticated:', session?.user?.id); // ADD THIS
+    });
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data?.user || null);
+      setUserLoaded(true);
+      console.log('User fetched:', data?.user?.id); // ADD THIS
+    });
+    return () => sub?.subscription?.unsubscribe?.();
+  }, []);
+
+  // THEN initialize layout hook with the user
   const { layout, isLoading, saveLayout } = useWidgetLayout(user, 'lg');
   
+  // ADD THIS LOG
+  console.log('Hook state:', { 
+    userLoaded, 
+    isLoading, 
+    hasLayout: !!layout, 
+    layoutLength: layout?.length 
+  });
+
   const [widgets, setWidgets] = useState(() => {
     const defaultLayout = DEFAULT_LAYOUTS.lg;
     if (import.meta.env.DEV) {
@@ -35,18 +60,11 @@ export default function App() {
     }));
   });
 
-  // Get authenticated user
-  useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user || null);
-    });
-    supabase.auth.getUser().then(({ data }) => setUser(data?.user || null));
-    return () => sub?.subscription?.unsubscribe?.();
-  }, []);
-
   // Load saved layout when available
   useEffect(() => {
-    if (!isLoading && layout) {
+    console.log('Layout effect triggered:', { isLoading, layout }); // ADD THIS
+    if (!isLoading && layout && layout.length > 0) {
+      console.log('Loading saved layout:', layout);
       const loadedWidgets = layout.map(layoutItem => ({
         id: layoutItem.i,
         title: WIDGETS[layoutItem.i]?.title || layoutItem.i,
@@ -74,6 +92,7 @@ export default function App() {
           w: w.w,
           h: w.h,
         }));
+        console.log('Saving layout:', layoutToSave); // Debug log
         saveLayout(layoutToSave);
       }
       
@@ -84,7 +103,8 @@ export default function App() {
   // Hook must be called at component top-level
   const { events, loading, error, needsAuth, signIn } = useGoogleCalendarEvents();
 
-  if (isLoading) {
+  // Wait for both user and layout to load
+  if (!userLoaded || isLoading) {
     return <div>Loading layout...</div>;
   }
 

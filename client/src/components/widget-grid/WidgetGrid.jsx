@@ -13,7 +13,6 @@ import {
 } from "../../api/preferences.js";
 // NOTE: adjust the import path to your supabase client if needed
 import { supabase } from "../../auth/supabaseClient.js";
-import { useWidgetLayout } from '../../hooks/useWidgetLayout';
 import { GRID_CONFIG } from '../../config/widgetLayoutDefaults';
 
 const GridCtx = React.createContext(null);
@@ -28,16 +27,16 @@ const debounce = (fn, ms = 300) => {
 };
 
 export default function WidgetGrid({
-                                     cols = 12,
-                                     rows = 8,
-                                     cellW = 96, // initial fallback only
-                                     rowH = 96, // initial fallback only
-                                     gap = 16,
-                                     showGrid = true,
-                                     className = "",
-                                     style = {},
-                                     children,
-                                   }) {
+  cols = 12,
+  rows = 8,
+  cellW = 96,
+  rowH = 96,
+  gap = 16,
+  showGrid = true,
+  className = "",
+  style = {},
+  children,
+}) {
   const containerRef = useRef(null);
   const clipRef = useRef(null);
   const wallpaperRef = useRef(null);
@@ -46,13 +45,10 @@ export default function WidgetGrid({
   const [wallpaper, setWallpaper] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [user, setUser] = useState(null);
-  const { layout, isLoading, saveLayout } = useWidgetLayout(user, 'lg');
 
-  // Derived cell sizes so the grid fills the viewport area exactly
   const [cw, setCw] = useState(cellW);
   const [rh, setRh] = useState(rowH);
 
-  // gate saving until DB has hydrated
   const hydratedRef = useRef(false);
 
   // auth
@@ -242,100 +238,87 @@ export default function WidgetGrid({
     };
   }, [cols, rows, cw, rh, gap, gridW, gridH, widgetColor]);
 
-  // Don't render grid until layout is ready
-  if (isLoading || !layout) {
-    return (
-      <div className="ios-widget-grid-container">
-        <div className="ios-grid-clip">
-          <div className="ios-wallpaper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div>Loading widgets...</div>
+  return (
+    <GridCtx.Provider value={ctxValue}>
+      <div className="ios-widget-grid-container" ref={containerRef}>
+        <button
+            className="ios-settings-button"
+            onClick={() => setShowSettings((v) => !v)}
+            aria-label="Open settings"
+        >
+          ⚙️
+        </button>
+
+        {showSettings && (
+            <div className="ios-settings-panel">
+              <h3>Customize Widgets</h3>
+
+              <div className="ios-setting-group">
+                <label htmlFor="wg-color">Widget Color</label>
+                <input
+                    id="wg-color"
+                    type="color"
+                    value={widgetColor}
+                    onChange={handleColorChange}
+                    className="ios-color-picker"
+                />
+                <div
+                    className="color-preview"
+                    style={{ backgroundColor: widgetColor }}
+                >
+                  {widgetColor}
+                </div>
+              </div>
+
+              <div className="ios-setting-group">
+                <label htmlFor="wg-wallpaper">Wallpaper</label>
+                <input
+                    id="wg-wallpaper"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleWallpaperUpload}
+                    className="ios-wallpaper-upload"
+                />
+              </div>
+
+              <button
+                  className="ios-close-settings"
+                  onClick={() => setShowSettings(false)}
+              >
+                Close
+              </button>
+            </div>
+        )}
+
+        {/* Full-viewport clip */}
+        <div className="ios-grid-clip" ref={clipRef}>
+          <div
+              className="ios-wallpaper"
+              ref={wallpaperRef}
+              style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : {}}
+          />
+
+          <div
+              role="grid"
+              aria-rowcount={rows}
+              aria-colcount={cols}
+              className={`ios-widget-grid ${className} ${
+                  showGrid ? "show-grid" : ""
+              }`}
+              style={{
+                width: gridW,
+                height: gridH,
+                "--cell-width": `${cw}px`,
+                "--cell-height": `${rh}px`,
+                "--grid-gap": `${gap}px`,
+                ...style,
+              }}
+          >
+            {children}
           </div>
         </div>
       </div>
-    );
-  }
-
-  return (
-      <GridCtx.Provider value={ctxValue}>
-        <div className="ios-widget-grid-container" ref={containerRef}>
-          <button
-              className="ios-settings-button"
-              onClick={() => setShowSettings((v) => !v)}
-              aria-label="Open settings"
-          >
-            ⚙️
-          </button>
-
-          {showSettings && (
-              <div className="ios-settings-panel">
-                <h3>Customize Widgets</h3>
-
-                <div className="ios-setting-group">
-                  <label htmlFor="wg-color">Widget Color</label>
-                  <input
-                      id="wg-color"
-                      type="color"
-                      value={widgetColor}
-                      onChange={handleColorChange}
-                      className="ios-color-picker"
-                  />
-                  <div
-                      className="color-preview"
-                      style={{ backgroundColor: widgetColor }}
-                  >
-                    {widgetColor}
-                  </div>
-                </div>
-
-                <div className="ios-setting-group">
-                  <label htmlFor="wg-wallpaper">Wallpaper</label>
-                  <input
-                      id="wg-wallpaper"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleWallpaperUpload}
-                      className="ios-wallpaper-upload"
-                  />
-                </div>
-
-                <button
-                    className="ios-close-settings"
-                    onClick={() => setShowSettings(false)}
-                >
-                  Close
-                </button>
-              </div>
-          )}
-
-          {/* Full-viewport clip */}
-          <div className="ios-grid-clip" ref={clipRef}>
-            <div
-                className="ios-wallpaper"
-                ref={wallpaperRef}
-                style={wallpaper ? { backgroundImage: `url(${wallpaper})` } : {}}
-            />
-
-            <div
-                role="grid"
-                aria-rowcount={rows}
-                aria-colcount={cols}
-                className={`ios-widget-grid ${className} ${
-                    showGrid ? "show-grid" : ""
-                }`}
-                style={{
-                  width: gridW,
-                  height: gridH,
-                  "--cell-width": `${cw}px`,
-                  "--cell-height": `${rh}px`,
-                  "--grid-gap": `${gap}px`,
-                  ...style,
-                }}
-            >
-              {children}
-            </div>
-          </div>
-        </div>
-      </GridCtx.Provider>
+    </GridCtx.Provider>
   );
 }
 

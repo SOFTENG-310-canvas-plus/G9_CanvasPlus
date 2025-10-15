@@ -1,10 +1,8 @@
-// =============================
-// File: app.jsx
-// =============================
-
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import WidgetGrid, { Widget } from "./components/WidgetGrid.jsx";
 import useGoogleCalendarEvents from "./hooks/useGoogleCalendarEvents";
+import { useWidgetLayout } from "./hooks/useWidgetLayout.js";
+import { supabase } from "./auth/supabaseClient.js";
 
 import WeatherWidget from "./components/WeatherWidget.jsx"
 import GptWrapper from "./components/GptWrapper.jsx"
@@ -14,37 +12,84 @@ import DailyScheduleWidget from "./components/DailyScheduleWidget.jsx";
 import TodoWidget from "./components/TodoWidget.jsx";
 import NotesWidget from './components/NotesWidget';
 import CanvasWidget from "./components/CanvasWidget.jsx";
-
+import { WIDGETS } from './config/widgets';
+import { DEFAULT_LAYOUTS, GRID_CONFIG } from './config/widgetLayoutDefaults';
+import { validateLayout } from './lib/layoutUtils';
 
 export default function App() {
-  const [widgets, setWidgets] = useState([
-       { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2 },
-    { id: "clock", title: "Clock", col: 0, row: 5, w: 5, h: 2},
-    { id: "calendar", title: "Calendar", col: 3, row: 0, w: 4, h: 3},
-    { id: "todo", title: "TODO List", col: 7, row: 0, w: 3, h: 4 },
-    { id: "schedule", title: "Daily Schedule", col: 10, row: 0, w: 4, h: 4.2 },
-    { id: "notes", title: "Notes", col: 0, row: 2, w: 3, h: 3 },
-    { id: "gptWrapper", title: "ChatGPTWrapper", col: 3, row: 4, w: 6, h: 3 },
-    { id: "search", title: "Search", col: 7, row: 0, w: 4, h: 1 },
-    { id: "canvas", title: "Canvas Tasks", col: 9, row: 3, w: 3, h: 4 },
+  const [user, setUser] = useState(null);
+  const { layout, isLoading, saveLayout } = useWidgetLayout(user, 'lg');
+  
+  const [widgets, setWidgets] = useState(() => {
+    const defaultLayout = DEFAULT_LAYOUTS.lg;
+    if (import.meta.env.DEV) {
+      validateLayout(defaultLayout, GRID_CONFIG.lg.cols);
+    }
+    return defaultLayout.map(layoutItem => ({
+      id: layoutItem.i,
+      title: WIDGETS[layoutItem.i]?.title || layoutItem.i,
+      col: layoutItem.col,
+      row: layoutItem.row,
+      w: layoutItem.w,
+      h: layoutItem.h,
+    }));
+  });
 
-  ]);
+  // Get authenticated user
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user || null);
+    });
+    supabase.auth.getUser().then(({ data }) => setUser(data?.user || null));
+    return () => sub?.subscription?.unsubscribe?.();
+  }, []);
+
+  // Load saved layout when available
+  useEffect(() => {
+    if (!isLoading && layout) {
+      const loadedWidgets = layout.map(layoutItem => ({
+        id: layoutItem.i,
+        title: WIDGETS[layoutItem.i]?.title || layoutItem.i,
+        col: layoutItem.col,
+        row: layoutItem.row,
+        w: layoutItem.w,
+        h: layoutItem.h,
+      }));
+      setWidgets(loadedWidgets);
+    }
+  }, [layout, isLoading]);
 
   const handleMove = useCallback((id, pos) => {
-    setWidgets((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, col: pos.col, row: pos.row } : w))
-    );
-  }, []);
+    setWidgets((prev) => {
+      const updated = prev.map((w) => 
+        w.id === id ? { ...w, col: pos.col, row: pos.row } : w
+      );
+      
+      // Save to database
+      if (user) {
+        const layoutToSave = updated.map(w => ({
+          i: w.id,
+          col: w.col,
+          row: w.row,
+          w: w.w,
+          h: w.h,
+        }));
+        saveLayout(layoutToSave);
+      }
+      
+      return updated;
+    });
+  }, [user, saveLayout]);
 
   // Hook must be called at component top-level
   const { events, loading, error, needsAuth, signIn } = useGoogleCalendarEvents();
 
+  if (isLoading) {
+    return <div>Loading layout...</div>;
+  }
+
   return (
     <>
-
-      {/* Add button row (if you want a global add, otherwise move this to widgets) */}
-
-
       <WidgetGrid cols={17} rows={8} cellW={96} rowH={96} gap={16} showGrid>
         {widgets.map((w) => (
           <Widget

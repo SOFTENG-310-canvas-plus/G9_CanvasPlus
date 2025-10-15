@@ -13,6 +13,8 @@ import {
 } from "../../api/preferences.js";
 // NOTE: adjust the import path to your supabase client if needed
 import { supabase } from "../../auth/supabaseClient.js";
+import { useWidgetLayout } from '../../hooks/useWidgetLayout';
+import { GRID_CONFIG } from '../../config/widgetLayoutDefaults';
 
 const GridCtx = React.createContext(null);
 
@@ -44,6 +46,7 @@ export default function WidgetGrid({
   const [wallpaper, setWallpaper] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [user, setUser] = useState(null);
+  const { layout, isLoading, saveLayout } = useWidgetLayout(user, 'lg');
 
   // Derived cell sizes so the grid fills the viewport area exactly
   const [cw, setCw] = useState(cellW);
@@ -238,6 +241,19 @@ export default function WidgetGrid({
       deltaPxToDeltaCells,
     };
   }, [cols, rows, cw, rh, gap, gridW, gridH, widgetColor]);
+
+  // Don't render grid until layout is ready
+  if (isLoading || !layout) {
+    return (
+      <div className="ios-widget-grid-container">
+        <div className="ios-grid-clip">
+          <div className="ios-wallpaper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div>Loading widgets...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
       <GridCtx.Provider value={ctxValue}>

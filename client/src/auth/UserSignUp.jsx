@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 export default function UserSignUp() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const navigate = useNavigate();
 
     // neutralize global layout for full background
@@ -46,14 +47,15 @@ export default function UserSignUp() {
 
     async function handleSubmit(e) {
         e.preventDefault();
+        if (password !== confirmPassword) {
+            toast.error("Passwords do not match");
+            return;
+        }
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) {
             toast.error(error.message);
-            setEmail("");
-            setPassword("");
         } else {
-            toast.success("Sign-up successful");
-            navigate("/canvas-plus");
+            toast.success("Check your email to confirm sign-up!");
         }
     }
 
@@ -67,19 +69,20 @@ export default function UserSignUp() {
                 justifyContent: "center",
                 overflow: "hidden",
                 fontFamily: "Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
-                background: "radial-gradient(circle at 20% 20%, #0b1e47, #040b1a 70%)",
+                background: "radial-gradient(circle at 80% 80%, #0b1e47, #040b1a 70%)",
+                padding: "var(--space-4)",
             }}
         >
-            {/* Floating gradients */}
+            {/* Floating gradient shapes */}
             <div
                 style={{
                     position: "absolute",
                     top: "-10%",
-                    left: "-10%",
+                    right: "-10%",
                     width: "40vw",
                     height: "40vw",
                     background:
-                        "radial-gradient(circle at center, rgba(0, 119, 255, 0.35), transparent 70%)",
+                        "radial-gradient(circle at center, rgba(0, 204, 255, 0.3), transparent 70%)",
                     filter: "blur(120px)",
                     animation: "float1 12s ease-in-out infinite alternate",
                 }}
@@ -88,23 +91,23 @@ export default function UserSignUp() {
                 style={{
                     position: "absolute",
                     bottom: "-15%",
-                    right: "-15%",
+                    left: "-15%",
                     width: "45vw",
                     height: "45vw",
                     background:
-                        "radial-gradient(circle at center, rgba(0, 204, 255, 0.25), transparent 70%)",
+                        "radial-gradient(circle at center, rgba(0, 119, 255, 0.25), transparent 70%)",
                     filter: "blur(100px)",
                     animation: "float2 14s ease-in-out infinite alternate",
                 }}
             />
 
-            {/* Card */}
+            {/* Sign-up card */}
             <div
                 style={{
                     zIndex: 2,
-                    width: "420px",
-                    maxWidth: "90vw",
-                    padding: "36px 32px",
+                    width: "100%",
+                    maxWidth: "420px",
+                    padding: "clamp(24px, 5vw, 36px) clamp(20px, 4vw, 32px)",
                     borderRadius: "12px",
                     background: "rgba(10, 22, 45, 0.75)",
                     boxShadow:
@@ -112,13 +115,14 @@ export default function UserSignUp() {
                     border: "1px solid rgba(255, 255, 255, 0.1)",
                     backdropFilter: "blur(12px)",
                     color: "#EAF2FF",
+                    boxSizing: "border-box",
                 }}
             >
                 <h1
                     style={{
                         textAlign: "center",
                         margin: "0 0 6px 0",
-                        fontSize: "22px",
+                        fontSize: "clamp(18px, 4vw, 22px)",
                         fontWeight: 700,
                         letterSpacing: "1px",
                         color: "#8fbfff",
@@ -126,13 +130,12 @@ export default function UserSignUp() {
                 >
                     CANVAS PLUS
                 </h1>
-
                 <h2
                     style={{
                         textAlign: "center",
-                        margin: "0 0 24px 0",
+                        margin: "0 0 clamp(20px, 4vw, 24px) 0",
                         fontWeight: 600,
-                        fontSize: "28px",
+                        fontSize: "clamp(24px, 5vw, 28px)",
                         color: "#fff",
                     }}
                 >
@@ -145,7 +148,7 @@ export default function UserSignUp() {
                             style={{
                                 display: "block",
                                 marginBottom: "6px",
-                                fontSize: "13px",
+                                fontSize: "clamp(12px, 2.5vw, 13px)",
                                 color: "rgba(234,242,255,0.85)",
                                 fontWeight: 500,
                             }}
@@ -166,6 +169,9 @@ export default function UserSignUp() {
                                 color: "#EAF2FF",
                                 outline: "none",
                                 transition: "border 0.2s ease",
+                                fontSize: "var(--font-base)",
+                                minHeight: "var(--touch-target-min)",
+                                boxSizing: "border-box",
                             }}
                             onFocus={(e) =>
                                 (e.target.style.border = "1px solid rgba(100,180,255,0.7)")
@@ -177,12 +183,12 @@ export default function UserSignUp() {
                         />
                     </div>
 
-                    <div style={{ marginBottom: "20px" }}>
+                    <div style={{ marginBottom: "14px" }}>
                         <label
                             style={{
                                 display: "block",
                                 marginBottom: "6px",
-                                fontSize: "13px",
+                                fontSize: "clamp(12px, 2.5vw, 13px)",
                                 color: "rgba(234,242,255,0.85)",
                                 fontWeight: 500,
                             }}
@@ -202,6 +208,42 @@ export default function UserSignUp() {
                                 background: "rgba(255,255,255,0.05)",
                                 color: "#EAF2FF",
                                 outline: "none",
+                                fontSize: "var(--font-base)",
+                                minHeight: "var(--touch-target-min)",
+                                boxSizing: "border-box",
+                            }}
+                            placeholder="••••••••"
+                        />
+                    </div>
+
+                    <div style={{ marginBottom: "20px" }}>
+                        <label
+                            style={{
+                                display: "block",
+                                marginBottom: "6px",
+                                fontSize: "clamp(12px, 2.5vw, 13px)",
+                                color: "rgba(234,242,255,0.85)",
+                                fontWeight: 500,
+                            }}
+                        >
+                            Confirm Password
+                        </label>
+                        <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            style={{
+                                width: "100%",
+                                padding: "12px",
+                                borderRadius: "8px",
+                                border: "1px solid rgba(255,255,255,0.15)",
+                                background: "rgba(255,255,255,0.05)",
+                                color: "#EAF2FF",
+                                outline: "none",
+                                fontSize: "var(--font-base)",
+                                minHeight: "var(--touch-target-min)",
+                                boxSizing: "border-box",
                             }}
                             placeholder="••••••••"
                         />
@@ -222,6 +264,8 @@ export default function UserSignUp() {
                             boxShadow:
                                 "0 6px 16px rgba(0, 120, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
                             transition: "all 0.2s ease-in-out",
+                            fontSize: "var(--font-base)",
+                            minHeight: "var(--touch-target-min)",
                         }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.background =
@@ -236,48 +280,61 @@ export default function UserSignUp() {
                                 "0 6px 16px rgba(0, 120, 255, 0.4)";
                         }}
                     >
-                        Sign Up
+                        Create Account
                     </button>
-                </form>
 
-                {/* Link back to Sign In */}
-                <p
-                    style={{
-                        textAlign: "center",
-                        marginTop: "18px",
-                        fontSize: "14px",
-                        color: "rgba(234,242,255,0.75)",
-                    }}
-                >
-                    Already have an account?{" "}
-                    <span
+                    <button
+                        type="button"
                         onClick={() => navigate("/login")}
                         style={{
-                            color: "#79b3ff",
-                            cursor: "pointer",
+                            width: "100%",
+                            marginTop: "12px",
+                            padding: "12px",
+                            borderRadius: "8px",
+                            border: "1px solid rgba(255,255,255,0.35)",
+                            backgroundColor: "transparent",
+                            color: "#EAF2FF",
                             fontWeight: 600,
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            fontSize: "var(--font-base)",
+                            minHeight: "var(--touch-target-min)",
                         }}
-                        onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
-                        onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)";
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "transparent";
+                        }}
                     >
-            Sign In
-          </span>
-                </p>
-
+                        Already have an account? Login
+                    </button>
+                </form>
                 <Toaster position="top-center" reverseOrder={false} />
             </div>
 
-            {/* Background animation keyframes */}
+            {/* Floating animation keyframes */}
             <style>{`
-        @keyframes float1 {
-          from { transform: translate(0px, 0px); }
-          to { transform: translate(40px, 60px); }
-        }
-        @keyframes float2 {
-          from { transform: translate(0px, 0px); }
-          to { transform: translate(-40px, -40px); }
-        }
-      `}</style>
+                @keyframes float1 {
+                    from { transform: translate(0px, 0px); }
+                    to { transform: translate(40px, 60px); }
+                }
+                @keyframes float2 {
+                    from { transform: translate(0px, 0px); }
+                    to { transform: translate(-40px, -40px); }
+                }
+                
+                @media (prefers-reduced-motion: reduce) {
+                    @keyframes float1 {
+                        from { transform: translate(0px, 0px); }
+                        to { transform: translate(0px, 0px); }
+                    }
+                    @keyframes float2 {
+                        from { transform: translate(0px, 0px); }
+                        to { transform: translate(0px, 0px); }
+                    }
+                }
+            `}</style>
         </div>
     );
 }

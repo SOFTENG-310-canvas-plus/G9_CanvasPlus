@@ -72,6 +72,7 @@ export default function UserLogin() {
                 overflow: "hidden",
                 fontFamily: "Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif",
                 background: "radial-gradient(circle at 20% 20%, #0b1e47, #040b1a 70%)",
+                padding: "var(--space-4)",
             }}
         >
             {/* Floating gradient shapes */}
@@ -104,9 +105,9 @@ export default function UserLogin() {
             <div
                 style={{
                     zIndex: 2,
-                    width: "420px",
-                    maxWidth: "90vw",
-                    padding: "36px 32px",
+                    width: "100%",
+                    maxWidth: "420px",
+                    padding: "clamp(24px, 5vw, 36px) clamp(20px, 4vw, 32px)",
                     borderRadius: "12px",
                     background: "rgba(10, 22, 45, 0.75)",
                     boxShadow:
@@ -114,13 +115,14 @@ export default function UserLogin() {
                     border: "1px solid rgba(255, 255, 255, 0.1)",
                     backdropFilter: "blur(12px)",
                     color: "#EAF2FF",
+                    boxSizing: "border-box",
                 }}
             >
                 <h1
                     style={{
                         textAlign: "center",
                         margin: "0 0 6px 0",
-                        fontSize: "22px",
+                        fontSize: "clamp(18px, 4vw, 22px)",
                         fontWeight: 700,
                         letterSpacing: "1px",
                         color: "#8fbfff",
@@ -131,9 +133,9 @@ export default function UserLogin() {
                 <h2
                     style={{
                         textAlign: "center",
-                        margin: "0 0 24px 0",
+                        margin: "0 0 clamp(20px, 4vw, 24px) 0",
                         fontWeight: 600,
-                        fontSize: "28px",
+                        fontSize: "clamp(24px, 5vw, 28px)",
                         color: "#fff",
                     }}
                 >
@@ -146,7 +148,7 @@ export default function UserLogin() {
                             style={{
                                 display: "block",
                                 marginBottom: "6px",
-                                fontSize: "13px",
+                                fontSize: "clamp(12px, 2.5vw, 13px)",
                                 color: "rgba(234,242,255,0.85)",
                                 fontWeight: 500,
                             }}
@@ -167,6 +169,9 @@ export default function UserLogin() {
                                 color: "#EAF2FF",
                                 outline: "none",
                                 transition: "border 0.2s ease",
+                                fontSize: "var(--font-base)",
+                                minHeight: "var(--touch-target-min)",
+                                boxSizing: "border-box",
                             }}
                             onFocus={(e) =>
                                 (e.target.style.border = "1px solid rgba(100,180,255,0.7)")
@@ -183,7 +188,7 @@ export default function UserLogin() {
                             style={{
                                 display: "block",
                                 marginBottom: "6px",
-                                fontSize: "13px",
+                                fontSize: "clamp(12px, 2.5vw, 13px)",
                                 color: "rgba(234,242,255,0.85)",
                                 fontWeight: 500,
                             }}
@@ -203,6 +208,9 @@ export default function UserLogin() {
                                 background: "rgba(255,255,255,0.05)",
                                 color: "#EAF2FF",
                                 outline: "none",
+                                fontSize: "var(--font-base)",
+                                minHeight: "var(--touch-target-min)",
+                                boxSizing: "border-box",
                             }}
                             placeholder="••••••••"
                         />
@@ -223,6 +231,8 @@ export default function UserLogin() {
                             boxShadow:
                                 "0 6px 16px rgba(0, 120, 255, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)",
                             transition: "all 0.2s ease-in-out",
+                            fontSize: "var(--font-base)",
+                            minHeight: "var(--touch-target-min)",
                         }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.background =
@@ -254,6 +264,8 @@ export default function UserLogin() {
                             fontWeight: 600,
                             cursor: "pointer",
                             transition: "all 0.2s ease",
+                            fontSize: "var(--font-base)",
+                            minHeight: "var(--touch-target-min)",
                         }}
                         onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)";
@@ -270,15 +282,26 @@ export default function UserLogin() {
 
             {/* Floating animation keyframes */}
             <style>{`
-        @keyframes float1 {
-          from { transform: translate(0px, 0px); }
-          to { transform: translate(40px, 60px); }
-        }
-        @keyframes float2 {
-          from { transform: translate(0px, 0px); }
-          to { transform: translate(-40px, -40px); }
-        }
-      `}</style>
+                @keyframes float1 {
+                    from { transform: translate(0px, 0px); }
+                    to { transform: translate(40px, 60px); }
+                }
+                @keyframes float2 {
+                    from { transform: translate(0px, 0px); }
+                    to { transform: translate(-40px, -40px); }
+                }
+                
+                @media (prefers-reduced-motion: reduce) {
+                    @keyframes float1 {
+                        from { transform: translate(0px, 0px); }
+                        to { transform: translate(0px, 0px); }
+                    }
+                    @keyframes float2 {
+                        from { transform: translate(0px, 0px); }
+                        to { transform: translate(0px, 0px); }
+                    }
+                }
+            `}</style>
         </div>
     );
 }

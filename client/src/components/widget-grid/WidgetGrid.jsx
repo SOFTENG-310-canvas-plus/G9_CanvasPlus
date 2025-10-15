@@ -40,6 +40,10 @@ export default function WidgetGrid({
   const clipRef = useRef(null);
   const wallpaperRef = useRef(null);
 
+
+
+
+
   const [widgetColor, setWidgetColor] = useState("#007AFF");
   const [wallpaper, setWallpaper] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -282,25 +286,25 @@ export default function WidgetGrid({
               />
             </div>
 
-            <div className="ios-setting-group">
-              <button
-                onClick={handleResetLayout}
-                className="ios-reset-layout-btn"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  background: '#ff3b30',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  marginTop: '8px'
-                }}
-              >
-                Reset Layout
-              </button>
-            </div>
+              <div className="ios-setting-group">
+                <button
+                  onClick={handleResetLayout}
+                  className="ios-reset-layout-btn"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: '#ff3b30',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    marginTop: '8px'
+                  }}
+                >
+                  Reset Layout
+                </button>
+              </div>
 
             <button
               className="ios-close-settings"

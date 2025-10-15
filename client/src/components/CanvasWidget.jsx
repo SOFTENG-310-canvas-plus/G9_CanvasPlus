@@ -88,18 +88,58 @@ function CanvasWidget() {
     }
   };
 
-  if (loading) return <div>Loading tasks...</div>;
-  if (error) return <div style={{ color: 'salmon' }}>Error: {error}</div>;
-
+  if (loading) {
+    return (
+      <div style={{ 
+        padding: 16, 
+        fontSize: 'clamp(13px, 2.5vw, 14px)',
+        color: 'rgba(0,0,0,0.6)',
+        textAlign: 'center',
+      }}>
+        Loading tasks...
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div style={{ 
+        color: 'salmon', 
+        padding: 16,
+        fontSize: 'clamp(13px, 2.5vw, 14px)',
+        textAlign: 'center',
+      }}>
+        Error: {error}
+      </div>
+    );
+  }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px' }}>
+    <div style={{ 
+      width: '100%',
+      maxWidth: 800, 
+      margin: '0 auto', 
+      padding: '0 16px',
+      boxSizing: 'border-box',
+    }}>
       {/* Responsive controls: Add button on top if not enough space */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)}
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 6, 
+        marginBottom: 10 
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: 10, 
+          alignItems: 'center', 
+          flexWrap: 'wrap' 
+        }}>
+          <select 
+            value={courseFilter} 
+            onChange={e => setCourseFilter(e.target.value)}
             style={{
-              fontSize: 13,
+              fontSize: 'clamp(12px, 2.5vw, 13px)',
               minWidth: 110,
               maxWidth: 180,
               padding: '4px 8px',
@@ -116,6 +156,8 @@ function CanvasWidget() {
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
+              minHeight: 44,
+              boxSizing: 'border-box',
             }}
             onFocus={e => e.target.style.border = '1.5px solid #6366f1'}
             onBlur={e => e.target.style.border = '1.5px solid #cbd5e1'}
@@ -124,9 +166,11 @@ function CanvasWidget() {
               <option key={c} value={c}>{c === "all" ? "All Courses" : c}</option>
             ))}
           </select>
-          <select value={timeFilter} onChange={e => setTimeFilter(e.target.value)}
+          <select 
+            value={timeFilter} 
+            onChange={e => setTimeFilter(e.target.value)}
             style={{
-              fontSize: 13,
+              fontSize: 'clamp(12px, 2.5vw, 13px)',
               minWidth: 110,
               maxWidth: 180,
               padding: '4px 8px',
@@ -143,6 +187,8 @@ function CanvasWidget() {
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
+              minHeight: 44,
+              boxSizing: 'border-box',
             }}
             onFocus={e => e.target.style.border = '1.5px solid #6366f1'}
             onBlur={e => e.target.style.border = '1.5px solid #cbd5e1'}
@@ -155,7 +201,7 @@ function CanvasWidget() {
           <button
             onClick={() => setShowCompleted(!showCompleted)}
             style={{
-              fontSize: 13,
+              fontSize: 'clamp(12px, 2.5vw, 13px)',
               padding: '6px 12px',
               borderRadius: 5,
               border: '1.5px solid #e5e7eb',
@@ -165,6 +211,9 @@ function CanvasWidget() {
               cursor: 'pointer',
               transition: 'all 0.2s',
               fontWeight: 500,
+              minHeight: 44,
+              minWidth: 44,
+              boxSizing: 'border-box',
             }}
           >
             {showCompleted ? 'Hide Completed' : 'Show Completed'}
@@ -177,7 +226,11 @@ function CanvasWidget() {
         position: 'relative',
       }}>
         {/** list for tasks */}
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        <ul style={{ 
+          listStyle: "none", 
+          padding: 0, 
+          margin: 0 
+        }}>
           {filtered
             .sort((a, b) => {
               if (!a.dueDate && !b.dueDate) return 0;
@@ -205,6 +258,7 @@ function CanvasWidget() {
                     opacity: fadingIds.includes(todo.id) ? 0 : 1,
                     transform: fadingIds.includes(todo.id) ? 'translateY(30px)' : 'translateY(0)',
                     pointerEvents: fadingIds.includes(todo.id) ? 'none' : 'auto',
+                    boxSizing: 'border-box',
                   }}
                 >
                   <button
@@ -238,6 +292,28 @@ function CanvasWidget() {
                       setHoldProgress(0);
                       setHoldId(null);
                     }}
+                    onTouchStart={() => {
+                      if (todo.done) return;
+                      setHoldId(todo.id);
+                      setHoldProgress(0);
+                      let progress = 0;
+                      holdInterval.current = setInterval(() => {
+                        progress += 100 / 9;
+                        setHoldProgress(progress);
+                      }, 100);
+                      holdTimeout.current = setTimeout(() => {
+                        clearInterval(holdInterval.current);
+                        setHoldProgress(100);
+                        toggleTodo(todo.id);
+                        setHoldId(null);
+                      }, 1000);
+                    }}
+                    onTouchEnd={() => {
+                      clearTimeout(holdTimeout.current);
+                      clearInterval(holdInterval.current);
+                      setHoldProgress(0);
+                      setHoldId(null);
+                    }}
                     style={{
                       width: 36,
                       height: 36,
@@ -258,6 +334,7 @@ function CanvasWidget() {
                       boxShadow: undefined,
                       padding: 0,
                       overflow: 'visible',
+                      flexShrink: 0,
                     }}
                     disabled={todo.done}
                   >
@@ -284,10 +361,14 @@ function CanvasWidget() {
                       </svg>
                     )}
                   </button>
-                  <div style={{ marginLeft: 4, flex: 1, minWidth: 0 }}>
+                  <div style={{ 
+                    marginLeft: 4, 
+                    flex: 1, 
+                    minWidth: 0 
+                  }}>
                     <div style={{
                       fontWeight: 600,
-                      fontSize: 16,
+                      fontSize: 'clamp(14px, 3vw, 16px)',
                       marginBottom: 2,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
@@ -297,14 +378,24 @@ function CanvasWidget() {
                     }} title={todo.title}>
                       {todo.title}
                     </div>
-                    <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 2 }}>{todo.course}</div>
+                    <div style={{ 
+                      fontSize: 'clamp(12px, 2.5vw, 13px)', 
+                      opacity: 0.8, 
+                      marginBottom: 2,
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
+                    }}>
+                      {todo.course}
+                    </div>
                     {todo.dueDate && (
                       <div style={{
-                         fontSize: 12,
-                         opacity: isOverdue ? 1 : 0.7,
-                         color: isOverdue ? "#ef4444" : 'inherit',
-                         fontWeight: isOverdue ? "bold" : 'normal',
-                          }}>
+                        fontSize: 'clamp(11px, 2vw, 12px)',
+                        opacity: isOverdue ? 1 : 0.7,
+                        color: isOverdue ? "#ef4444" : 'inherit',
+                        fontWeight: isOverdue ? "bold" : 'normal',
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                      }}>
                         Due: {new Date(todo.dueDate).toLocaleString()}
                       </div>
                     )}

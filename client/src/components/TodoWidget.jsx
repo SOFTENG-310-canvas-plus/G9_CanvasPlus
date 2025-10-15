@@ -136,11 +136,38 @@ function TodoWidget() {
     setModalClass("");
   };
 
-  if (loading) return <div>Loading tasks...</div>;
-  if (error) return <div style={{ color: 'salmon' }}>Error: {error}</div>;
+  if (loading) {
+    return (
+      <div style={{ 
+        padding: 'clamp(12px, 3vw, 16px)',
+        fontSize: 'clamp(13px, 2.5vw, 14px)',
+        color: 'rgba(0,0,0,0.6)',
+      }}>
+        Loading tasks...
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div style={{ 
+        color: 'salmon', 
+        padding: 'clamp(12px, 3vw, 16px)',
+        fontSize: 'clamp(13px, 2.5vw, 14px)',
+      }}>
+        Error: {error}
+      </div>
+    );
+  }
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px' }}>
+    <div style={{ 
+      width: '100%',
+      maxWidth: 800, 
+      margin: '0 auto', 
+      padding: '0 clamp(12px, 3vw, 16px)',
+      boxSizing: 'border-box',
+    }}>
       <style>
         {`
           @keyframes check-pop {
@@ -150,27 +177,39 @@ function TodoWidget() {
           }
         `}
       </style>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: 'clamp(4px, 1vw, 6px)', 
+        marginBottom: 'clamp(8px, 2vw, 10px)' 
+      }}>
         <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
           <button onClick={() => setShowModal(true)} style={{
             background: '#22223b',
             color: '#fff',
             border: 'none',
             borderRadius: 7,
-            padding: '6px 16px',
+            padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px)',
             fontWeight: 600,
-            fontSize: 13,
+            fontSize: 'clamp(12px, 2.5vw, 13px)',
             cursor: 'pointer',
             boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-          }}>Add</button>
+            minHeight: 44,
+            minWidth: 44,
+            transition: 'background 0.2s',
+            boxSizing: 'border-box',
+          }}
+          onMouseOver={e => e.currentTarget.style.background = '#2d2d4a'}
+          onMouseOut={e => e.currentTarget.style.background = '#22223b'}
+          >Add</button>
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'clamp(8px, 2vw, 10px)', alignItems: 'center', flexWrap: 'wrap' }}>
           <select value={timeFilter} onChange={e => setTimeFilter(e.target.value)}
             style={{
-              fontSize: 13,
+              fontSize: 'clamp(12px, 2.5vw, 13px)',
               minWidth: 110,
               maxWidth: 180,
-              padding: '4px 8px',
+              padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px)',
               borderRadius: 5,
               border: '1.5px solid #e5e7eb',
               appearance: 'auto',
@@ -184,6 +223,8 @@ function TodoWidget() {
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
+              minHeight: 44,
+              boxSizing: 'border-box',
             }}
             onFocus={e => e.target.style.border = '1.5px solid #6366f1'}
             onBlur={e => e.target.style.border = '1.5px solid #cbd5e1'}
@@ -210,60 +251,188 @@ function TodoWidget() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: 24
+            padding: 'clamp(16px, 4vw, 24px)',
           }}
         >
           <div
             style={{
               background: '#fff',
               borderRadius: 16,
-              padding: 28,
+              padding: 'clamp(20px, 5vw, 28px)',
               width: 'min(560px,100%)',
               boxShadow: '0 12px 48px -8px rgba(0,0,0,0.25)',
               position: 'relative',
               maxHeight: '90vh',
-              overflowY: 'auto'
+              overflowY: 'auto',
+              boxSizing: 'border-box',
             }}
           >
             <button
               onClick={() => setShowModal(false)}
               style={{
                 position: 'absolute',
-                top: 12,
-                right: 16,
+                top: 'clamp(8px, 2vw, 12px)',
+                right: 'clamp(12px, 3vw, 16px)',
                 background: 'none',
                 border: 'none',
-                fontSize: 22,
+                fontSize: 'clamp(18px, 4vw, 22px)',
                 color: '#888',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                minWidth: 44,
+                minHeight: 44,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
               title="Close"
             >✕</button>
-            <h3 style={{ margin: 0, marginBottom: 18, fontWeight: 700, fontSize: 20, color: '#22223b' }}>
+            <h3 style={{ 
+              margin: 0, 
+              marginBottom: 'clamp(14px, 3.5vw, 18px)', 
+              fontWeight: 700, 
+              fontSize: 'clamp(16px, 4vw, 20px)', 
+              color: '#22223b',
+              wordWrap: 'break-word',
+            }}>
               Add New Task
             </h3>
             <form onSubmit={handleAddTodo}>
-              <div style={{ marginBottom: 14 }}>
-                <label htmlFor="todo-title" style={{ fontSize: 14, fontWeight: 500, color: '#22223b', marginBottom: 4, display: 'block' }}>Title</label>
-                <input id="todo-title" value={modalTitle} onChange={e => setModalTitle(e.target.value)} required placeholder="Task title..." style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none' }} />
+              <div style={{ marginBottom: 'clamp(10px, 2.5vw, 14px)' }}>
+                <label htmlFor="todo-title" style={{ 
+                  fontSize: 'clamp(12px, 2.5vw, 14px)', 
+                  fontWeight: 500, 
+                  color: '#22223b', 
+                  marginBottom: 'clamp(3px, 0.75vw, 4px)', 
+                  display: 'block' 
+                }}>Title</label>
+                <input 
+                  id="todo-title" 
+                  value={modalTitle} 
+                  onChange={e => setModalTitle(e.target.value)} 
+                  required 
+                  placeholder="Task title..." 
+                  style={{ 
+                    width: '100%', 
+                    padding: 'clamp(8px, 2vw, 10px)', 
+                    borderRadius: 7, 
+                    border: '1.5px solid #e5e7eb', 
+                    fontSize: 'clamp(13px, 2.5vw, 15px)', 
+                    outline: 'none',
+                    minHeight: 44,
+                    boxSizing: 'border-box',
+                    fontFamily: 'inherit',
+                  }} 
+                  onFocus={e => e.target.style.border = '1.5px solid #6366f1'}
+                  onBlur={e => e.target.style.border = '1.5px solid #e5e7eb'}
+                />
               </div>
 
-              <div style={{ marginBottom: 14 }}>
-                <label htmlFor="todo-description" style={{ fontSize: 14, fontWeight: 500, color: '#22223b', marginBottom: 4, display: 'block' }}>Description</label>
-                <textarea id="todo-description" value={modalDescription} onChange={e => setModalDescription(e.target.value)} placeholder="Optional details..." rows={3} style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none', resize: 'vertical' }} />
+              <div style={{ marginBottom: 'clamp(10px, 2.5vw, 14px)' }}>
+                <label htmlFor="todo-description" style={{ 
+                  fontSize: 'clamp(12px, 2.5vw, 14px)', 
+                  fontWeight: 500, 
+                  color: '#22223b', 
+                  marginBottom: 'clamp(3px, 0.75vw, 4px)', 
+                  display: 'block' 
+                }}>Description</label>
+                <textarea 
+                  id="todo-description" 
+                  value={modalDescription} 
+                  onChange={e => setModalDescription(e.target.value)} 
+                  placeholder="Optional details..." 
+                  rows={3} 
+                  style={{ 
+                    width: '100%', 
+                    padding: 'clamp(8px, 2vw, 10px)', 
+                    borderRadius: 7, 
+                    border: '1.5px solid #e5e7eb', 
+                    fontSize: 'clamp(13px, 2.5vw, 15px)', 
+                    outline: 'none', 
+                    resize: 'vertical',
+                    boxSizing: 'border-box',
+                    fontFamily: 'inherit',
+                    lineHeight: 1.5,
+                  }} 
+                  onFocus={e => e.target.style.border = '1.5px solid #6366f1'}
+                  onBlur={e => e.target.style.border = '1.5px solid #e5e7eb'}
+                />
               </div>
 
-              <div style={{ marginBottom: 14 }}>
-                <label htmlFor="todo-due-date" style={{ fontSize: 14, fontWeight: 500, color: '#22223b', marginBottom: 4, display: 'block' }}>Due Date</label>
-                <input id="todo-due-date" type="datetime-local" value={modalDue} onChange={e => setModalDue(e.target.value)} style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none' }} />
+              <div style={{ marginBottom: 'clamp(10px, 2.5vw, 14px)' }}>
+                <label htmlFor="todo-due-date" style={{ 
+                  fontSize: 'clamp(12px, 2.5vw, 14px)', 
+                  fontWeight: 500, 
+                  color: '#22223b', 
+                  marginBottom: 'clamp(3px, 0.75vw, 4px)', 
+                  display: 'block' 
+                }}>Due Date</label>
+                <input 
+                  id="todo-due-date" 
+                  type="datetime-local" 
+                  value={modalDue} 
+                  onChange={e => setModalDue(e.target.value)} 
+                  style={{ 
+                    width: '100%', 
+                    padding: 'clamp(8px, 2vw, 10px)', 
+                    borderRadius: 7, 
+                    border: '1.5px solid #e5e7eb', 
+                    fontSize: 'clamp(13px, 2.5vw, 15px)', 
+                    outline: 'none',
+                    minHeight: 44,
+                    boxSizing: 'border-box',
+                    fontFamily: 'inherit',
+                  }} 
+                  onFocus={e => e.target.style.border = '1.5px solid #6366f1'}
+                  onBlur={e => e.target.style.border = '1.5px solid #e5e7eb'}
+                />
               </div>
 
-              <div style={{ marginBottom: 18 }}>
-                <label htmlFor="todo-class" style={{ fontSize: 14, fontWeight: 500, color: '#22223b', marginBottom: 4, display: 'block' }}>Class</label>
-                <input id="todo-class" value={modalClass} onChange={e => setModalClass(e.target.value)} placeholder="Class (optional)..." style={{ width: '100%', padding: '8px 10px', borderRadius: 7, border: '1.5px solid #e5e7eb', fontSize: 15, outline: 'none' }} />
+              <div style={{ marginBottom: 'clamp(14px, 3.5vw, 18px)' }}>
+                <label htmlFor="todo-class" style={{ 
+                  fontSize: 'clamp(12px, 2.5vw, 14px)', 
+                  fontWeight: 500, 
+                  color: '#22223b', 
+                  marginBottom: 'clamp(3px, 0.75vw, 4px)', 
+                  display: 'block' 
+                }}>Class</label>
+                <input 
+                  id="todo-class" 
+                  value={modalClass} 
+                  onChange={e => setModalClass(e.target.value)} 
+                  placeholder="Class (optional)..." 
+                  style={{ 
+                    width: '100%', 
+                    padding: 'clamp(8px, 2vw, 10px)', 
+                    borderRadius: 7, 
+                    border: '1.5px solid #e5e7eb', 
+                    fontSize: 'clamp(13px, 2.5vw, 15px)', 
+                    outline: 'none',
+                    minHeight: 44,
+                    boxSizing: 'border-box',
+                    fontFamily: 'inherit',
+                  }} 
+                  onFocus={e => e.target.style.border = '1.5px solid #6366f1'}
+                  onBlur={e => e.target.style.border = '1.5px solid #e5e7eb'}
+                />
               </div>
 
-              <button type="submit" style={{ width: '100%', padding: '10px 0', borderRadius: 8, background: '#22223b', color: '#fff', border: 'none', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>Add Task</button>
+              <button type="submit" style={{ 
+                width: '100%', 
+                padding: 'clamp(8px, 2vw, 10px) 0', 
+                borderRadius: 8, 
+                background: '#22223b', 
+                color: '#fff', 
+                border: 'none', 
+                fontWeight: 600, 
+                fontSize: 'clamp(14px, 3vw, 16px)', 
+                cursor: 'pointer',
+                minHeight: 44,
+                transition: 'background 0.2s',
+                boxSizing: 'border-box',
+              }}
+              onMouseOver={e => e.currentTarget.style.background = '#2d2d4a'}
+              onMouseOut={e => e.currentTarget.style.background = '#22223b'}
+              >Add Task</button>
             </form>
           </div>
         </div>,
@@ -273,7 +442,7 @@ function TodoWidget() {
       <div style={{
         maxHeight: 'calc(100vh - 200px)',
         overflowY: 'auto',
-        paddingRight: 8,
+        paddingRight: 'clamp(6px, 1.5vw, 8px)',
         scrollbarWidth: 'thin',
         position: 'relative',
         WebkitOverflowScrolling: 'touch',
@@ -295,17 +464,19 @@ function TodoWidget() {
                   style={{
                     display: "flex",
                     alignItems: "flex-start",
-                    marginBottom: 12,
+                    marginBottom: 'clamp(10px, 2.5vw, 12px)',
                     background: "#fff",
                     color: todo.done ? "#888" : "#222",
                     borderRadius: 10,
-                    padding: 12,
+                    padding: 'clamp(10px, 2.5vw, 12px)',
                     boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                     position: "relative",
                     transition: "opacity 0.35s, transform 0.35s",
                     opacity: fadingIds.includes(todo.id) ? 0 : 1,
                     transform: fadingIds.includes(todo.id) ? 'translateY(30px)' : 'translateY(0)',
                     pointerEvents: fadingIds.includes(todo.id) ? 'none' : 'auto',
+                    boxSizing: 'border-box',
+                    gap: 'clamp(8px, 2vw, 12px)',
                   }}
                 >
                   <button
@@ -326,8 +497,6 @@ function TodoWidget() {
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      marginTop: 2,
-                      marginRight: 12,
                       position: 'relative',
                       outline: 'none',
                       transition: 'transform 120ms ease, background 0.2s, border 0.2s, box-shadow 0.2s',
@@ -336,7 +505,8 @@ function TodoWidget() {
                       transform: todo.done ? 'scale(0.98)' : 'scale(1)',
                       boxShadow: todo.done
                         ? '0 0 0 3px rgba(34,197,94,0.25), 0 4px 10px rgba(0,0,0,0.08)'
-                        : '0 0 0 0 rgba(0,0,0,0)'
+                        : '0 0 0 0 rgba(0,0,0,0)',
+                      flexShrink: 0,
                     }}
                   >
                     <svg
@@ -359,11 +529,11 @@ function TodoWidget() {
                       <polyline points="5 11 9 15 15 7" />
                     </svg>
                   </button>
-                  <div style={{ marginLeft: 4, flex: 1, minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
                       fontWeight: 600,
-                      fontSize: 16,
-                      marginBottom: 2,
+                      fontSize: 'clamp(14px, 3vw, 16px)',
+                      marginBottom: 'clamp(1px, 0.25vw, 2px)',
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
@@ -373,37 +543,67 @@ function TodoWidget() {
                       {todo.title}
                     </div>
                     {todo.class && (
-                      <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 2 }}>
+                      <div style={{ 
+                        fontSize: 'clamp(12px, 2.5vw, 13px)', 
+                        opacity: 0.8, 
+                        marginBottom: 'clamp(1px, 0.25vw, 2px)',
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                      }}>
                         {todo.class}
                       </div>
                     )}
                     {todo.due_date && (
-                      <div style={{ fontSize: 12, opacity: 0.7 }}>
+                      <div style={{ 
+                        fontSize: 'clamp(11px, 2vw, 12px)', 
+                        opacity: 0.7,
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                      }}>
                         Due: {new Date(todo.due_date).toLocaleString()}
                       </div>
                     )}
                     {todo.description && (
-                      <div style={{ fontSize: 13, opacity: todo.done ? 0.6 : 0.9, marginBottom: 4, whiteSpace: 'pre-wrap' }}>
+                      <div style={{ 
+                        fontSize: 'clamp(12px, 2.5vw, 13px)', 
+                        opacity: todo.done ? 0.6 : 0.9, 
+                        marginBottom: 'clamp(3px, 0.75vw, 4px)', 
+                        whiteSpace: 'pre-wrap',
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                      }}>
                         {todo.description}
                       </div>
                     )}
                   </div>
                   <button onClick={() => handleDeleteTodo(todo.id)} style={{
-                    marginLeft: 10,
                     background: "#fff",
                     border: "1.5px solid #f87171",
                     color: "#f87171",
                     borderRadius: 8,
-                    fontSize: 16,
+                    fontSize: 'clamp(14px, 3vw, 16px)',
                     fontWeight: 600,
                     width: 32,
                     height: 32,
+                    minWidth: 32,
+                    minHeight: 32,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: "pointer",
-                    transition: "background 0.2s, color 0.2s, border 0.2s"
-                  }} title="Delete task">✕</button>
+                    transition: "background 0.2s, color 0.2s, border 0.2s",
+                    flexShrink: 0,
+                    padding: 0,
+                  }} 
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = '#f87171';
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = '#fff';
+                    e.currentTarget.style.color = '#f87171';
+                  }}
+                  title="Delete task">✕</button>
                 </li>
               );
             })}

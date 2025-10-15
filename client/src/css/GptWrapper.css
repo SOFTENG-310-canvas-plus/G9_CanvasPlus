@@ -219,3 +219,307 @@ background: #3b3f4a;          /* grey bubble */
   .gptw-actions { gap: 8px; }
   .gptw-btn { padding: 8px 12px; font-size: 0.9rem; }
 }
+
+.gpt-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  box-sizing: border-box;
+}
+
+.gpt-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Empty state */
+.gpt-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: var(--space-2);
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+.gpt-empty-icon {
+  font-size: clamp(2rem, 8vw, 3rem);
+  opacity: 0.5;
+}
+
+.gpt-empty-text {
+  font-size: var(--font-base);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.gpt-empty-subtext {
+  font-size: var(--font-sm);
+  opacity: 0.7;
+}
+
+/* Messages */
+.gpt-message {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  animation: messageSlideIn 0.3s ease-out;
+  max-width: 100%;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gpt-message {
+    animation: none;
+  }
+}
+
+.gpt-message-user {
+  flex-direction: row-reverse;
+}
+
+.gpt-message-avatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-base);
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+/* Larger avatars on bigger screens */
+@media (min-width: 768px) {
+  .gpt-message-avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+}
+
+.gpt-message-content {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: var(--space-3);
+  max-width: calc(100% - 48px);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: var(--leading-relaxed);
+  font-size: var(--font-sm);
+  color: #fff;
+}
+
+/* Responsive max-width */
+@media (min-width: 768px) {
+  .gpt-message-content {
+    max-width: 75%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .gpt-message-content {
+    max-width: 65%;
+  }
+}
+
+.gpt-message-user .gpt-message-content {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Typing indicator */
+.gpt-typing {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-3);
+}
+
+.gpt-typing span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  animation: typing 1.4s infinite;
+}
+
+.gpt-typing span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.gpt-typing span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  30% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gpt-typing span {
+    animation: typingReduced 1.4s infinite;
+  }
+
+  @keyframes typingReduced {
+    0%, 60%, 100% {
+      opacity: 0.6;
+    }
+    30% {
+      opacity: 1;
+    }
+  }
+}
+
+/* Input form */
+.gpt-input-form {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  align-items: flex-end;
+}
+
+.gpt-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: var(--space-3);
+  color: #fff;
+  font-size: var(--font-sm);
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  transition: all 0.2s;
+  line-height: var(--leading-normal);
+  max-height: 120px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gpt-input:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.gpt-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gpt-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: var(--font-xs);
+}
+
+/* Responsive placeholder */
+@media (max-width: 767px) {
+  .gpt-input::placeholder {
+    font-size: var(--font-xs);
+  }
+}
+
+.gpt-submit {
+  background: rgba(99, 102, 241, 0.9);
+  border: none;
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+  color: #fff;
+  font-size: var(--font-lg);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gpt-submit:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.gpt-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.gpt-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(99, 102, 241, 0.5);
+}
+
+.gpt-submit:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.8);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gpt-submit:hover:not(:disabled) {
+    transform: none;
+  }
+  
+  .gpt-submit:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Scrollbar styling */
+.gpt-messages::-webkit-scrollbar,
+.gpt-input::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gpt-messages::-webkit-scrollbar-track,
+.gpt-input::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.gpt-messages::-webkit-scrollbar-thumb,
+.gpt-input::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.gpt-messages::-webkit-scrollbar-thumb:hover,
+.gpt-input::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

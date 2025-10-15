@@ -1,6 +1,4 @@
-
 import React from "react";
-
 
 function DailyScheduleWidget() {
   // Scroll to the next incomplete activity (not done, and in the future) on mount
@@ -37,6 +35,7 @@ function DailyScheduleWidget() {
     // Only run on mount
     // eslint-disable-next-line
   }, []);
+  
   const timelineRef = React.useRef(null);
   const [activities, setActivities] = React.useState([
     { id: 2, title: 'Wake up', start: 420, end: 435, done: false }, // 07:00 - 07:15
@@ -80,6 +79,7 @@ function DailyScheduleWidget() {
   const windowHeight = windowMinutes * pxPerMinute; // 324px
   const timelineWidth = 320;
   const totalMinutes = timelineEnd - timelineStart;
+  
   function timeToY(minutes) {
     return (minutes - timelineStart) * pxPerMinute;
   }
@@ -113,27 +113,81 @@ function DailyScheduleWidget() {
   };
 
   return (
-    <div style={{ position: 'relative', height: windowHeight + 60, width: timelineWidth + 60, padding: 0, background: '#f9fafb', borderRadius: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden', border: '1.5px solid #e0e7ef' }}>
+    <div style={{ 
+      position: 'relative', 
+      height: windowHeight + 60, 
+      width: '100%',
+      maxWidth: timelineWidth + 60,
+      padding: 0, 
+      background: '#f9fafb', 
+      borderRadius: 10, 
+      boxShadow: '0 1px 4px rgba(0,0,0,0.04)', 
+      overflow: 'hidden', 
+      border: '1.5px solid #e0e7ef',
+      boxSizing: 'border-box',
+    }}>
       {/* Add Activity Button */}
-      <div style={{ padding: '12px 14px 10px 14px', display: 'flex', justifyContent: 'flex-end' }}>
-        <button onClick={() => setShowModal(true)} style={{ background: '#22223b', color: '#fff', border: 'none', borderRadius: 7, padding: '6px 16px', fontWeight: 600, fontSize: 13, cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>Add Activity</button>
+      <div style={{ 
+        padding: '12px 14px 10px 14px', 
+        display: 'flex', 
+        justifyContent: 'flex-end' 
+      }}>
+        <button 
+          onClick={() => setShowModal(true)} 
+          style={{ 
+            background: '#22223b', 
+            color: '#fff', 
+            border: 'none', 
+            borderRadius: 7, 
+            padding: '6px 16px', 
+            fontWeight: 600, 
+            fontSize: 'clamp(12px, 2.5vw, 13px)', 
+            cursor: 'pointer', 
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            minHeight: 44,
+            minWidth: 44,
+          }}
+        >
+          Add Activity
+        </button>
       </div>
+      
       {/* Timeline container with grid, scrollable, flex layout for time labels */}
-      <div ref={timelineRef} style={{ display: 'flex', flexDirection: 'row', margin: '0px 14px 14px 0', height: windowHeight, width: timelineWidth + 80, borderRadius: 7, overflowY: 'auto', background: '#fff' }}>
+      <div 
+        ref={timelineRef} 
+        style={{ 
+          display: 'flex', 
+          flexDirection: 'row', 
+          margin: '0px 14px 14px 0', 
+          height: windowHeight, 
+          width: '100%',
+          maxWidth: timelineWidth + 80,
+          borderRadius: 7, 
+          overflowY: 'auto', 
+          background: '#fff',
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
         {/* Time label column */}
-        <div style={{ width: 70, position: 'relative', height: timelineHeight, background: 'linear-gradient(to right, #f3f4f6 90%, transparent)' }}>
+        <div style={{ 
+          width: 70, 
+          minWidth: 70,
+          position: 'relative', 
+          height: timelineHeight, 
+          background: 'linear-gradient(to right, #f3f4f6 90%, transparent)' 
+        }}>
           {timelineLabels.map(({ hour, y }, idx) => (
             <div key={hour + '-' + y} style={{
               position: 'absolute',
               left: 0,
-              top: idx === 0 ? timeToY(y) : timeToY(y) - 18, // for 0:00, align top to grid line
+              top: idx === 0 ? timeToY(y) : timeToY(y) - 18,
               width: 70,
               height: 36,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-end',
               color: '#22223b',
-              fontSize: 16,
+              fontSize: 'clamp(14px, 3vw, 16px)',
               fontWeight: 700,
               letterSpacing: 1,
               background: 'none',
@@ -142,8 +196,15 @@ function DailyScheduleWidget() {
             }}>{hour}</div>
           ))}
         </div>
+        
         {/* Timeline and grid */}
-        <div style={{ position: 'relative', height: timelineHeight, width: timelineWidth }}>
+        <div style={{ 
+          position: 'relative', 
+          height: timelineHeight, 
+          width: '100%',
+          maxWidth: timelineWidth,
+          flex: 1,
+        }}>
           {/* Grid lines */}
           {timelineLabels.map(({ hour, y }) => (
             <div key={'grid-' + hour + '-' + y} style={{
@@ -156,10 +217,30 @@ function DailyScheduleWidget() {
               zIndex: 0
             }} />
           ))}
+          
           {/* Timeline vertical line (full height) */}
-          <div style={{ position: 'absolute', left: 0, top: 0, width: 2, height: '100%', background: '#6366f1', zIndex: 1 }} />
+          <div style={{ 
+            position: 'absolute', 
+            left: 0, 
+            top: 0, 
+            width: 2, 
+            height: '100%', 
+            background: '#6366f1', 
+            zIndex: 1 
+          }} />
+          
           {/* Now line */}
-          <div style={{ position: 'absolute', left: 0, right: 0, top: timeToY(nowMinutes), height: 2, background: '#f87171', zIndex: 2, opacity: 0.7 }} />
+          <div style={{ 
+            position: 'absolute', 
+            left: 0, 
+            right: 0, 
+            top: timeToY(nowMinutes), 
+            height: 2, 
+            background: '#f87171', 
+            zIndex: 2, 
+            opacity: 0.7 
+          }} />
+          
           {/* Activities as blocks */}
           {activities.map(act => {
             const isLate = !act.done && nowMinutes > act.start + 10;
@@ -170,7 +251,8 @@ function DailyScheduleWidget() {
                 left: 28,
                 top: timeToY(act.start),
                 height: Math.max(44, timeToY(act.end) - timeToY(act.start)),
-                width: timelineWidth - 80,
+                width: 'calc(100% - 80px)',
+                maxWidth: timelineWidth - 80,
                 background: act.done ? '#e0f2fe' : isLate ? '#fecaca' : '#fbbf24',
                 color: act.done ? '#888' : isLate ? '#b91c1c' : '#222',
                 borderRadius: 7,
@@ -179,9 +261,10 @@ function DailyScheduleWidget() {
                 alignItems: 'center',
                 padding: '0 8px',
                 fontWeight: 500,
-                fontSize: 13,
+                fontSize: 'clamp(12px, 2.5vw, 13px)',
                 zIndex: 2,
-                border: isLate ? '2px solid #ef4444' : undefined
+                border: isLate ? '2px solid #ef4444' : undefined,
+                boxSizing: 'border-box',
               }} title={act.title}>
                 <button
                   type="button"
@@ -214,6 +297,28 @@ function DailyScheduleWidget() {
                     setHoldProgress(0);
                     setHoldId(null);
                   }}
+                  onTouchStart={() => {
+                    if (act.done) return;
+                    setHoldId(act.id);
+                    setHoldProgress(0);
+                    let progress = 0;
+                    holdInterval.current = setInterval(() => {
+                      progress += 100 / 9;
+                      setHoldProgress(progress);
+                    }, 100);
+                    holdTimeout.current = setTimeout(() => {
+                      clearInterval(holdInterval.current);
+                      setHoldProgress(100);
+                      handleTickActivity(act.id);
+                      setHoldId(null);
+                    }, 1000);
+                  }}
+                  onTouchEnd={() => {
+                    clearTimeout(holdTimeout.current);
+                    clearInterval(holdInterval.current);
+                    setHoldProgress(0);
+                    setHoldId(null);
+                  }}
                   style={{
                     width: 36,
                     height: 36,
@@ -233,6 +338,7 @@ function DailyScheduleWidget() {
                     boxShadow: undefined,
                     padding: 0,
                     overflow: 'visible',
+                    flexShrink: 0,
                   }}
                   disabled={act.done}
                 >
@@ -257,7 +363,14 @@ function DailyScheduleWidget() {
                     </svg>
                   )}
                 </button>
-                <span style={{ fontWeight: 700, marginRight: 8 }}>
+                <span style={{ 
+                  fontWeight: 700, 
+                  marginRight: 8,
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word',
+                  flex: 1,
+                  minWidth: 0,
+                }}>
                   {act.title}
                   {isLate && (
                     <span style={{
@@ -265,15 +378,22 @@ function DailyScheduleWidget() {
                       background: '#fee2e2',
                       borderRadius: 5,
                       fontWeight: 800,
-                      fontSize: 11,
+                      fontSize: 'clamp(10px, 2vw, 11px)',
                       marginLeft: 8,
                       padding: '2px 7px',
                       letterSpacing: 0.5,
                       verticalAlign: 'middle',
+                      whiteSpace: 'nowrap',
                     }}>Late</span>
                   )}
                 </span>
-                <span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.8 }}>
+                <span style={{ 
+                  marginLeft: 'auto', 
+                  fontSize: 'clamp(10px, 2vw, 11px)', 
+                  opacity: 0.8,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}>
                   {`${String(Math.floor(act.start / 60)).padStart(2, '0')}:${String(act.start % 60).padStart(2, '0')}`} - {`${String(Math.floor(act.end / 60)).padStart(2, '0')}:${String(act.end % 60).padStart(2, '0')}`}
                 </span>
               </div>
@@ -281,29 +401,178 @@ function DailyScheduleWidget() {
           })}
         </div>
       </div>
+      
       {/* Modal for adding activity */}
       {showModal && (
         <div style={{
-          position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh',
-          background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center'
+          position: 'fixed', 
+          left: 0, 
+          top: 0, 
+          width: '100vw', 
+          height: '100vh',
+          background: 'rgba(0,0,0,0.18)', 
+          zIndex: 1000, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          padding: 16,
         }}>
-          <div style={{ background: '#fff', borderRadius: 10, padding: 18, minWidth: 220, boxShadow: '0 4px 24px rgba(0,0,0,0.10)', position: 'relative' }}>
-            <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 8, right: 12, background: 'none', border: 'none', fontSize: 18, color: '#888', cursor: 'pointer' }} title="Close">✕</button>
-            <h3 style={{ margin: 0, marginBottom: 12, fontWeight: 700, fontSize: 15, color: '#22223b' }}>Add Activity</h3>
+          <div style={{ 
+            background: '#fff', 
+            borderRadius: 10, 
+            padding: 18, 
+            width: '100%',
+            maxWidth: 320,
+            boxShadow: '0 4px 24px rgba(0,0,0,0.10)', 
+            position: 'relative',
+            boxSizing: 'border-box',
+          }}>
+            <button 
+              onClick={() => setShowModal(false)} 
+              style={{ 
+                position: 'absolute', 
+                top: 8, 
+                right: 12, 
+                background: 'none', 
+                border: 'none', 
+                fontSize: 18, 
+                color: '#888', 
+                cursor: 'pointer',
+                minWidth: 44,
+                minHeight: 44,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }} 
+              title="Close"
+            >
+              ✕
+            </button>
+            <h3 style={{ 
+              margin: 0, 
+              marginBottom: 12, 
+              fontWeight: 700, 
+              fontSize: 'clamp(14px, 3vw, 15px)', 
+              color: '#22223b' 
+            }}>
+              Add Activity
+            </h3>
             <form onSubmit={handleAddActivity}>
               <div style={{ marginBottom: 10 }}>
-                <label htmlFor="activity-title" style={{ fontSize: 11, fontWeight: 600, color: '#22223b', marginBottom: 3, display: 'block' }}>Title</label>
-                <input id="activity-title" value={modalTitle} onChange={e => setModalTitle(e.target.value)} required placeholder="Activity title..." style={{ width: '100%', padding: '6px 8px', borderRadius: 5, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none' }} />
+                <label 
+                  htmlFor="activity-title" 
+                  style={{ 
+                    fontSize: 'clamp(10px, 2.5vw, 11px)', 
+                    fontWeight: 600, 
+                    color: '#22223b', 
+                    marginBottom: 3, 
+                    display: 'block' 
+                  }}
+                >
+                  Title
+                </label>
+                <input 
+                  id="activity-title" 
+                  value={modalTitle} 
+                  onChange={e => setModalTitle(e.target.value)} 
+                  required 
+                  placeholder="Activity title..." 
+                  style={{ 
+                    width: '100%', 
+                    padding: '6px 8px', 
+                    borderRadius: 5, 
+                    border: '1.5px solid #e5e7eb', 
+                    fontSize: 'clamp(11px, 2.5vw, 12px)', 
+                    outline: 'none',
+                    minHeight: 44,
+                    boxSizing: 'border-box',
+                  }} 
+                />
               </div>
               <div style={{ marginBottom: 10 }}>
-                <label htmlFor="start-time" style={{ fontSize: 11, fontWeight: 600, color: '#22223b', marginBottom: 3, display: 'block' }}>Start Time</label>
-                <input id="start-time" type="time" value={modalTime} onChange={e => setModalTime(e.target.value)} required style={{ width: '100%', padding: '6px 8px', borderRadius: 5, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none' }} />
+                <label 
+                  htmlFor="start-time" 
+                  style={{ 
+                    fontSize: 'clamp(10px, 2.5vw, 11px)', 
+                    fontWeight: 600, 
+                    color: '#22223b', 
+                    marginBottom: 3, 
+                    display: 'block' 
+                  }}
+                >
+                  Start Time
+                </label>
+                <input 
+                  id="start-time" 
+                  type="time" 
+                  value={modalTime} 
+                  onChange={e => setModalTime(e.target.value)} 
+                  required 
+                  style={{ 
+                    width: '100%', 
+                    padding: '6px 8px', 
+                    borderRadius: 5, 
+                    border: '1.5px solid #e5e7eb', 
+                    fontSize: 'clamp(11px, 2.5vw, 12px)', 
+                    outline: 'none',
+                    minHeight: 44,
+                    boxSizing: 'border-box',
+                  }} 
+                />
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label htmlFor="duration-minutes" style={{ fontSize: 11, fontWeight: 600, color: '#22223b', marginBottom: 3, display: 'block' }}>Duration (minutes)</label>
-                <input id="duration-minutes" type="number" min={5} max={180} step={5} value={modalDuration} onChange={e => setModalDuration(e.target.value)} required style={{ width: '100%', padding: '6px 8px', borderRadius: 5, border: '1.5px solid #e5e7eb', fontSize: 12, outline: 'none' }} />
+                <label 
+                  htmlFor="duration-minutes" 
+                  style={{ 
+                    fontSize: 'clamp(10px, 2.5vw, 11px)', 
+                    fontWeight: 600, 
+                    color: '#22223b', 
+                    marginBottom: 3, 
+                    display: 'block' 
+                  }}
+                >
+                  Duration (minutes)
+                </label>
+                <input 
+                  id="duration-minutes" 
+                  type="number" 
+                  min={5} 
+                  max={180} 
+                  step={5} 
+                  value={modalDuration} 
+                  onChange={e => setModalDuration(e.target.value)} 
+                  required 
+                  style={{ 
+                    width: '100%', 
+                    padding: '6px 8px', 
+                    borderRadius: 5, 
+                    border: '1.5px solid #e5e7eb', 
+                    fontSize: 'clamp(11px, 2.5vw, 12px)', 
+                    outline: 'none',
+                    minHeight: 44,
+                    boxSizing: 'border-box',
+                  }} 
+                />
               </div>
-              <button type="submit" style={{ width: '100%', padding: '8px 0', borderRadius: 7, background: '#22223b', color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, letterSpacing: 0.2, cursor: 'pointer', transition: 'background 0.2s' }}>Add</button>
+              <button 
+                type="submit" 
+                style={{ 
+                  width: '100%', 
+                  padding: '8px 0', 
+                  borderRadius: 7, 
+                  background: '#22223b', 
+                  color: '#fff', 
+                  border: 'none', 
+                  fontWeight: 700, 
+                  fontSize: 'clamp(12px, 2.5vw, 13px)', 
+                  letterSpacing: 0.2, 
+                  cursor: 'pointer', 
+                  transition: 'background 0.2s',
+                  minHeight: 44,
+                }}
+              >
+                Add
+              </button>
             </form>
           </div>
         </div>

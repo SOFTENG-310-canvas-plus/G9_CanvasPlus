@@ -134,7 +134,12 @@ export default function NotesWidget() {
   // From here, code below is styling and rendering
   if (loading) {
     return (
-      <div style={{ color: "black", opacity: 0.7, padding: 8 }}>
+      <div style={{ 
+        color: "black", 
+        opacity: 0.7, 
+        padding: 'clamp(8px, 2vw, 12px)',
+        fontSize: 'clamp(12px, 2.5vw, 14px)',
+      }}>
         Loading notes...
       </div>
     );
@@ -143,18 +148,28 @@ export default function NotesWidget() {
   // Assume user is logged in to access widgets
   if (!user) {
     return (
-      <div>
-        <label style={{ display: "block", fontSize: 12, opacity: 0.7, marginBottom: 6 }}>
+      <div style={{ 
+        padding: 'clamp(8px, 2vw, 12px)',
+        boxSizing: 'border-box',
+      }}>
+        <label style={{ 
+          display: "block", 
+          fontSize: 'clamp(11px, 2vw, 12px)', 
+          opacity: 0.7, 
+          marginBottom: 'clamp(4px, 1vw, 6px)' 
+        }}>
           Quick note
         </label>
         <div style={{ 
           color: "white", 
           opacity: 0.7, 
-          padding: 8,
+          padding: 'clamp(8px, 2vw, 12px)',
           textAlign: "center",
           border: "1px solid rgba(255,255,255,0.12)",
           borderRadius: 8,
-          background: "rgba(255,255,255,0.06)"
+          background: "rgba(255,255,255,0.06)",
+          fontSize: 'clamp(12px, 2.5vw, 13px)',
+          wordWrap: 'break-word',
         }}>
           Please log in to use notes
         </div>
@@ -163,29 +178,42 @@ export default function NotesWidget() {
   }
 
   return (
-    <div>
-      <label style={{ display: "block", fontSize: 12, opacity: 0.7, marginBottom: 6 }}>
+    <div style={{
+      padding: 'clamp(8px, 2vw, 12px)',
+      boxSizing: 'border-box',
+      width: '100%',
+    }}>
+      <label style={{ 
+        display: "block", 
+        fontSize: 'clamp(11px, 2vw, 12px)', 
+        opacity: 0.7, 
+        marginBottom: 'clamp(4px, 1vw, 6px)' 
+      }}>
         Quick note
       </label>
       
       <textarea
         value={newNote}
         onChange={(e) => setNewNote(e.target.value)}
+        onKeyDown={handleKeyPress}
         rows={6}
         placeholder="Type here… (Ctrl+Enter to save)"
         disabled={saving}
         style={{
           width: "100%",
-          padding: 8,
+          padding: 'clamp(8px, 2vw, 10px)',
           borderRadius: 8,
           border: "1px solid rgba(255,255,255,0.12)",
-          // Last digits control opacity, currently set low to not too distracting
-          // left is while the text is being saved
           background: saving ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.06)",
           color: "black",
           outline: "none",
           resize: "vertical",
-          opacity: saving ? 0.6 : 1
+          opacity: saving ? 0.6 : 1,
+          fontSize: 'clamp(12px, 2.5vw, 13px)',
+          boxSizing: 'border-box',
+          minHeight: 44,
+          lineHeight: 1.5,
+          fontFamily: 'inherit',
         }}
       />
       
@@ -193,36 +221,51 @@ export default function NotesWidget() {
         onClick={saveNote}
         disabled={!newNote.trim() || saving}
         style={{
-          marginTop: 8,
-          padding: "6px 12px",
+          marginTop: 'clamp(6px, 1.5vw, 8px)',
+          padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 12px)',
           borderRadius: 6,
           border: "1px solid rgba(255,255,255,0.12)",
           background: (newNote.trim() && !saving) ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)",
           color: "black",
           cursor: (newNote.trim() && !saving) ? "pointer" : "not-allowed",
           opacity: (newNote.trim() && !saving) ? 1 : 0.5,
-          fontSize: 12
+          fontSize: 'clamp(11px, 2vw, 12px)',
+          width: '100%',
+          minHeight: 44,
+          fontWeight: 500,
+          transition: 'all 0.2s',
+          boxSizing: 'border-box',
         }}
       >
         {saving ? "Saving..." : "Save Note"}
       </button>
 
       {notes.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <label style={{ display: "block", fontSize: 12, opacity: 0.7, marginBottom: 8 }}>
+        <div style={{ marginTop: 'clamp(12px, 3vw, 16px)' }}>
+          <label style={{ 
+            display: "block", 
+            fontSize: 'clamp(11px, 2vw, 12px)', 
+            opacity: 0.7, 
+            marginBottom: 'clamp(6px, 1.5vw, 8px)' 
+          }}>
             Saved notes ({notes.length})
           </label>
           
-          <div style={{ maxHeight: 300, overflowY: "auto" }}>
+          <div style={{ 
+            maxHeight: 300, 
+            overflowY: "auto",
+            WebkitOverflowScrolling: 'touch',
+          }}>
             {notes.map((note) => (
               <div 
                 key={note.id}
                 style={{
-                  padding: 10,
-                  marginBottom: 8,
+                  padding: 'clamp(8px, 2vw, 10px)',
+                  marginBottom: 'clamp(6px, 1.5vw, 8px)',
                   borderRadius: 6,
                   border: "1px solid rgba(255,255,255,0.12)",
-                  background: "rgba(255,255,255,0.04)"
+                  background: "rgba(255,255,255,0.04)",
+                  boxSizing: 'border-box',
                 }}
               >
                 {editingId === note.id ? (
@@ -233,28 +276,41 @@ export default function NotesWidget() {
                       style={{
                         width: "100%",
                         minHeight: 60,
-                        padding: 6,
+                        padding: 'clamp(6px, 1.5vw, 8px)',
                         borderRadius: 4,
                         border: "1px solid rgba(255,255,255,0.2)",
                         background: "rgba(255,255,255,0.1)",
                         color: "black",
                         outline: "none",
                         resize: "vertical",
-                        marginBottom: 6
+                        marginBottom: 'clamp(4px, 1vw, 6px)',
+                        fontSize: 'clamp(12px, 2.5vw, 13px)',
+                        boxSizing: 'border-box',
+                        lineHeight: 1.5,
+                        fontFamily: 'inherit',
                       }}
                     />
-                    <div style={{ display: "flex", gap: 6 }}>
+                    <div style={{ 
+                      display: "flex", 
+                      gap: 'clamp(4px, 1vw, 6px)',
+                      flexWrap: 'wrap',
+                    }}>
                       <button
                         onClick={() => updateNote(note.id, editContent)}
                         disabled={!editContent.trim()}
                         style={{
-                          fontSize: 10,
-                          padding: "3px 8px",
+                          fontSize: 'clamp(10px, 2vw, 11px)',
+                          padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px)',
                           borderRadius: 4,
                           border: "1px solid rgba(100,255,100,0.3)",
                           background: editContent.trim() ? "rgba(100,255,100,0.1)" : "rgba(100,255,100,0.05)",
                           color: editContent.trim() ? "#22aa22" : "rgba(170,255,170,0.3)",
-                          cursor: editContent.trim() ? "pointer" : "not-allowed"
+                          cursor: editContent.trim() ? "pointer" : "not-allowed",
+                          minHeight: 44,
+                          minWidth: 44,
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                          boxSizing: 'border-box',
                         }}
                       >
                         Save
@@ -262,13 +318,18 @@ export default function NotesWidget() {
                       <button
                         onClick={cancelEdit}
                         style={{
-                          fontSize: 10,
-                          padding: "3px 8px",
+                          fontSize: 'clamp(10px, 2vw, 11px)',
+                          padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px)',
                           borderRadius: 4,
-                           border: "1px solid rgba(255,100,100,0.3)",
+                          border: "1px solid rgba(255,100,100,0.3)",
                           background: "rgba(255,100,100,0.1)",
                           color: "#ffaaaa",
-                          cursor: "pointer"
+                          cursor: "pointer",
+                          minHeight: 44,
+                          minWidth: 44,
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                          boxSizing: 'border-box',
                         }}
                       >
                         Cancel
@@ -279,10 +340,12 @@ export default function NotesWidget() {
                   <div>
                     <div style={{ 
                       color: "black", 
-                      fontSize: 13, 
-                      marginBottom: 6,
+                      fontSize: 'clamp(12px, 2.5vw, 13px)', 
+                      marginBottom: 'clamp(4px, 1vw, 6px)',
                       lineHeight: 1.4,
-                      whiteSpace: "pre-wrap"
+                      whiteSpace: "pre-wrap",
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
                     }}>
                       {note.content}
                     </div>
@@ -290,26 +353,42 @@ export default function NotesWidget() {
                     <div style={{ 
                       display: "flex", 
                       justifyContent: "space-between", 
-                      alignItems: "center" 
+                      alignItems: "center",
+                      gap: 'clamp(6px, 1.5vw, 8px)',
+                      flexWrap: 'wrap',
                     }}>
-                      <span style={{ fontSize: 11, opacity: 0.5, color: "black" }}>
+                      <span style={{ 
+                        fontSize: 'clamp(10px, 2vw, 11px)', 
+                        opacity: 0.5, 
+                        color: "black",
+                        wordWrap: 'break-word',
+                      }}>
                         {new Date(note.created_at).toLocaleString()}
                         {note.updated_at !== note.created_at && (
                           <span style={{ fontStyle: "italic" }}> (edited)</span>
                         )}
                       </span>
                       
-                      <div style={{ display: "flex", gap: 6 }}>
+                      <div style={{ 
+                        display: "flex", 
+                        gap: 'clamp(4px, 1vw, 6px)',
+                        flexWrap: 'wrap',
+                      }}>
                         <button
                           onClick={() => startEdit(note)}
                           style={{
-                            fontSize: 10,
-                            padding: "3px 8px",
+                            fontSize: 'clamp(10px, 2vw, 11px)',
+                            padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px)',
                             borderRadius: 4,
                             border: "1px solid rgba(100,150,255,0.3)",
                             background: "rgba(100,150,255,0.1)",
                             color: "#000000ff",
-                            cursor: "pointer"
+                            cursor: "pointer",
+                            minHeight: 44,
+                            minWidth: 44,
+                            fontWeight: 500,
+                            transition: 'all 0.2s',
+                            boxSizing: 'border-box',
                           }}
                           onMouseOver={(e) => {
                             e.target.style.background = "rgba(100,150,255,0.2)";
@@ -324,13 +403,18 @@ export default function NotesWidget() {
                         <button
                           onClick={() => deleteNote(note.id)}
                           style={{
-                            fontSize: 10,
-                            padding: "3px 8px",
+                            fontSize: 'clamp(10px, 2vw, 11px)',
+                            padding: 'clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px)',
                             borderRadius: 4,
                             border: "1px solid rgba(255,100,100,0.3)",
                             background: "rgba(255,100,100,0.1)",
                             color: "#ffaaaa",
-                            cursor: "pointer"
+                            cursor: "pointer",
+                            minHeight: 44,
+                            minWidth: 44,
+                            fontWeight: 500,
+                            transition: 'all 0.2s',
+                            boxSizing: 'border-box',
                           }}
                           onMouseOver={(e) => {
                             e.target.style.background = "rgba(255,100,100,0.2)";
@@ -353,12 +437,13 @@ export default function NotesWidget() {
 
       {notes.length === 0 && (
         <div style={{ 
-          marginTop: 16, 
-          padding: 12, 
+          marginTop: 'clamp(12px, 3vw, 16px)', 
+          padding: 'clamp(10px, 2.5vw, 12px)', 
           textAlign: "center", 
           opacity: 0.5, 
-          fontSize: 12,
-          color: "white"
+          fontSize: 'clamp(11px, 2vw, 12px)',
+          color: "white",
+          wordWrap: 'break-word',
         }}>
           No saved notes yet. Write your first note above
         </div>

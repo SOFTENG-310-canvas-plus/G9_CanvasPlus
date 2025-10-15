@@ -246,7 +246,7 @@ export default function WidgetGrid({
     };
   }, [cols, rows, cw, rh, gap, gridW, gridH, widgetColor]);
 
-  return (
+return (
     <GridCtx.Provider value={ctxValue}>
       <div className="ios-widget-grid-container" ref={containerRef}>
         <button
@@ -289,25 +289,25 @@ export default function WidgetGrid({
               />
             </div>
 
-              <div className="ios-setting-group">
-                <button
-                  onClick={handleResetLayout}
-                  className="ios-reset-layout-btn"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    background: '#ff3b30',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    marginTop: '8px'
-                  }}
-                >
-                  Reset Layout
-                </button>
-              </div>
+            <div className="ios-setting-group">
+              <button
+                onClick={handleResetLayout}
+                className="ios-reset-layout-btn"
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  background: '#ff3b30',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  marginTop: '8px'
+                }}
+              >
+                Reset Layout
+              </button>
+            </div>
 
             <button
               className="ios-close-settings"
@@ -345,7 +345,8 @@ export default function WidgetGrid({
             {children}
           </div>
         </div>
-      </GridCtx.Provider>
+      </div>
+    </GridCtx.Provider>
   );
 }
 

@@ -1,80 +1,84 @@
-import React, { useState} from 'react';
-
-// engine list to map the enginer name to the search url for a query
-const ENGINES = {
-    google:{label: "Google", url: (query) => `https://www.google.com/search?q=${encodeURIComponent(query)}`},
-    baidu:{label: "Baidu", url: (query) => `https://www.baidu.com/s?wd=${encodeURIComponent(query)}` },
-    bing:{label: "Bing", url: (query) => `https://www.bing.com/search?q=${encodeURIComponent(query)}` },
-    ddg:{label: "DuckDuckGo", url: (query) => `https://www.duckduckgo.com/search?q=${encodeURIComponent(query)}` },
-    yahoo:{label: "Yahoo!", url: (query) => `https://www.search.yahoo.com/search?p=${encodeURIComponent(query)}` },
-    wikipedia:{label: "Wiki", url: (query) => `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(query)}` },
-}
+import React, { useState } from 'react';
 
 export default function SearchWidget() {
-    const [query,setQuery] = useState('');
+  const [query, setQuery] = useState('');
 
-    // sets the first engine as the default engine
-    const FIRST_ENGINE = Object.keys(ENGINES)[0];
-    const [engine, setEngine] = useState(FIRST_ENGINE);
-
-    /**
-     * Handle form submit:
-     *  - Prevent the form from reloading the page
-     *  - Trim whitespace and no-op on empty input
-     *  - Open the chosen engine's URL in a new tab
-     *  - Clear the input afterward
-     */
-    const onSearch = (e) =>{
-        e.preventDefault();
-        const queryText = query.trim();
-        if (!queryText) return;
-        window.open(ENGINES[engine].url(query),"_blank");
-        setQuery("");
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (query.trim()) {
+      window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+      setQuery('');
     }
-    return(
-        // Form wrapper so "Enter" submits the search.
-        <form
-            onSubmit={onSearch}
+  };
+
+  return (
+    <div style={{ 
+      padding: 'var(--space-3)', 
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+    }}>
+      <form onSubmit={handleSearch} style={{ width: '100%' }}>
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search Google..."
             style={{
-                width:"100%",
-                height:"100%",
-                border:"border-box",
-                display:"flex",
-                alignItems:'center',
-                justifyContent:'center',
+              width: '100%',
+              padding: 'var(--space-3) var(--space-12) var(--space-3) var(--space-4)',
+              fontSize: 'var(--font-base)',
+              borderRadius: 12,
+              border: '1.5px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.08)',
+              color: '#fff',
+              outline: 'none',
+              transition: 'all 0.2s',
+              fontFamily: 'inherit',
+              boxSizing: 'border-box',
+              minHeight: 'var(--touch-target-min)',
             }}
-        >
-            <div style={{ display: "flex", width: "100%", gap: 8 }}>
-                <select
-                    aria-label="Search engine"
-                    value={engine}
-                    onChange={(e) => setEngine(e.target.value)}
-                    style={{
-                        border: "none", background: "none",
-                        color: "white", outline: "none",
-                    }}
-                >
-                    {Object.entries(ENGINES).map(([key, { label }]) => (
-                        <option key={key} value={key} style={{ color: "black" }}>
-                            {label}
-                        </option>
-                    ))}
-                </select>
-            <div style={{ position: "relative", flex: 1 }}>
-                <input value={query}
-                   onChange={(e) => setQuery(e.target.value)}
-                   placeholder={"Type here to Search"}
-                   aria-label={"search"}
-                   autoComplete="off"
-                   spellCheck={false}
-                   style={{
-                       border:"none",
-                       outline: "none",
-                       width:"100%",
-                       backgroundColor:"transparent",
-                   }}/>
-            </div>
-            </div>
-        </form>
-    )
+            onFocus={(e) => {
+              e.target.style.borderColor = 'rgba(255,255,255,0.3)';
+              e.target.style.background = 'rgba(255,255,255,0.12)';
+              e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'rgba(255,255,255,0.15)';
+              e.target.style.background = 'rgba(255,255,255,0.08)';
+              e.target.style.boxShadow = 'none';
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              position: 'absolute',
+              right: 'var(--space-2)',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'rgba(99,102,241,0.9)',
+              border: 'none',
+              borderRadius: 8,
+              padding: 'var(--space-2) var(--space-3)',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: 'var(--font-sm)',
+              fontWeight: 600,
+              transition: 'background 0.2s',
+              minHeight: 'var(--touch-target-min)',
+              minWidth: 'var(--touch-target-min)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(99,102,241,1)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(99,102,241,0.9)'}
+          >
+            🔍
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 }

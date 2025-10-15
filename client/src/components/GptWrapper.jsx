@@ -1,186 +1,117 @@
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import "../App.css";
+import React, { useState, useRef, useEffect } from "react";
 import "../css/GptWrapper.css";
 
-// Pretty-print helper (unchanged)
-const stringifyPretty = (obj) => {
-  if (obj == null) return '';
-  if (typeof obj === 'string') {
-    try {
-      const parsed = JSON.parse(obj);
-      if (typeof parsed === 'string') return parsed;
-    } catch {}
-    return obj.replaceAll('\\r\\n', '\n').replaceAll('\\n', '\n').replaceAll('\\t', '\t');
-  }
-  try { return JSON.stringify(obj, null, 2); } catch { return String(obj); }
-};
-
 export default function GptWrapper() {
-  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [responseData, setResponseData] = useState(null); // kept for compatibility
-  const [error, setError] = useState(null);
-  const [copied, setCopied] = useState(false); // kept
-  const [history, setHistory] = useState([]);  // [{ role: 'user'|'assistant', content: string }]
+  const messagesEndRef = useRef(null);
 
-  // Load saved history
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('gpt_history');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) setHistory(parsed);
-      }
-    } catch {}
-  }, []);
-
-  // Persist history
-  useEffect(() => {
-    try { localStorage.setItem('gpt_history', JSON.stringify(history)); } catch {}
-  }, [history]);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(stringifyPretty(responseData));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch (e) {
-      console.error('Copy failed', e);
-    }
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleReset = () => {
-    setHistory([]);
-    setResponseData(null);
-    setError(null);
-    setInput('');
-  };
-
-  // Auto-grow textarea
-  const taRef = useRef(null);
-  const autoResize = () => {
-    const el = taRef.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    const maxPx = 8 * 28 + 28; // cap ~8 lines
-    el.style.height = Math.min(el.scrollHeight, maxPx) + 'px';
-  };
-  useEffect(autoResize, [input]);
-
-  // Auto-scroll to bottom on new messages
-  const listRef = useRef(null);
   useEffect(() => {
-    const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [history, loading]);
+    scrollToBottom();
+  }, [messages]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
-    setLoading(true);
-    setError(null);
-    setResponseData(null);
+    if (!input.trim() || loading) return;
 
-    const nextHistoryUser = [...history, { role: 'user', content: input }];
-    const recentHistory = nextHistoryUser.slice(-8);
+    const userMessage = { role: "user", content: input.trim() };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setLoading(true);
 
     try {
-      const response = await axios.post(
-        'http://localhost:8080/api/ai/complete',        // unchanged endpoint
-        { question: input, history: recentHistory },    // unchanged payload
-        { headers: { 'Content-Type': 'text/plain' } }   // unchanged header
-      );
+      const response = await fetch("http://localhost:8080/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input.trim() }),
+      });
 
-      setResponseData(response.data); // kept
+      if (!response.ok) throw new Error("Failed to get response");
 
-      const assistantText = stringifyPretty(response.data);
-      setHistory([...nextHistoryUser, { role: 'assistant', content: assistantText }]);
-      setInput('');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong.');
-      setHistory(nextHistoryUser);
+      const data = await response.json();
+      const assistantMessage = { role: "assistant", content: data.response };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Chat error:", error);
+      const errorMessage = {
+        role: "assistant",
+        content: "Sorry, I couldn't process your request. Please try again.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
   return (
-    <div className="gptw-card">
-      {/* Header: left-focused */}
-      <div className="gptw-header">
-        <h3>Ask Chat…</h3>
-        <p>What's on your mind today? Talk to the almighty GPT wrapper.</p>
-      </div>
-
-      {/* Error banner (only if error) */}
-      {error && (
-        <div className="gptw-error">
-          <strong>Request failed:</strong>&nbsp;<span>{error}</span>
-        </div>
-      )}
-
-      {/* Messages list */}
-      <div ref={listRef} className="gptw-list">
-        {history.length === 0 && (
-          <div className="gptw-empty">Start the conversation below.</div>
-        )}
-
-        {history.map((m, idx) => {
-          const isUser = m.role === 'user';
-          return (
-            <div
-              key={idx}
-              className={`gptw-row ${isUser ? 'gptw-right' : 'gptw-left'}`}
-            >
-              {/* USER = right bubble, BOT = plain left text */}
-              <div className={`gptw-bubble ${isUser ? 'user' : 'bot'}`}>
-                {m.content}
+    <div className="gpt-wrapper">
+      <div className="gpt-messages">
+        {messages.length === 0 ? (
+          <div className="gpt-empty-state">
+            <div className="gpt-empty-icon">💬</div>
+            <div className="gpt-empty-text">Start a conversation</div>
+            <div className="gpt-empty-subtext">Ask me anything!</div>
+          </div>
+        ) : (
+          <>
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`gpt-message ${
+                  msg.role === "user" ? "gpt-message-user" : "gpt-message-assistant"
+                }`}
+              >
+                <div className="gpt-message-avatar">
+                  {msg.role === "user" ? "👤" : "🤖"}
+                </div>
+                <div className="gpt-message-content">{msg.content}</div>
               </div>
-
-              {/* Tail only for user (right side) */}
-              {isUser && <span className="gptw-tail" aria-hidden="true" />}
-            </div>
-          );
-        })}
+            ))}
+            {loading && (
+              <div className="gpt-message gpt-message-assistant">
+                <div className="gpt-message-avatar">🤖</div>
+                <div className="gpt-message-content gpt-typing">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </>
+        )}
       </div>
 
-      {/* Composer sticks to bottom of wrapper */}
-      <form onSubmit={handleSubmit} className="gptw-composer">
-        <label htmlFor="gpt-input" className="sr-only">Your question</label>
+      <form onSubmit={handleSubmit} className="gpt-input-form">
         <textarea
-          id="gpt-input"
-          ref={taRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onInput={autoResize}
-          placeholder="Ask me anything…"
-          rows={5}
-          className="gptw-input"
+          onKeyDown={handleKeyDown}
+          placeholder="Type your message... (Enter to send, Shift+Enter for new line)"
           disabled={loading}
+          rows={1}
+          className="gpt-input"
         />
-
-        {/* Reset left, Submit right */}
-        <div className="gptw-actions gptw-actions-split">
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={loading}
-            className="gptw-btn secondary"
-            aria-label="Reset chat"
-          >
-            Reset chat
-          </button>
-
-          <button
-            type="submit"
-            disabled={loading || !input.trim()}
-            className="gptw-btn primary"
-            aria-label="Submit message"
-          >
-            {loading ? 'Submitting…' : 'Submit'}
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={!input.trim() || loading}
+          className="gpt-submit"
+          aria-label="Send message"
+        >
+          {loading ? "⏳" : "📤"}
+        </button>
       </form>
     </div>
   );

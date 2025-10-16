@@ -1,38 +1,125 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "../auth/supabaseClient";
 
 function LinkVaultWidget() {
   const [links, setLinks] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newLink, setNewLink] = useState({ url: "", title: "", category: "" });
+  const [user, setUser] = useState(null);
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
 
-  // Get unique categories for filter
-  const categories = ["all", ...Array.from(new Set(links.map(l => l.category).filter(Boolean)))];
+  useEffect(() => {
+    checkUser();
+  }, []);
 
-  const handleAddLink = () => {
-    if (!newLink.url.trim()) return;
-    
-    const link = {
-      id: Date.now(),
-      url: newLink.url.trim(),
-      title: newLink.title.trim() || newLink.url.trim(),
-      category: newLink.category.trim() || "Uncategorized",
-      dateAdded: new Date().toISOString()
-    };
-    
-    setLinks(prev => [link, ...prev]);
-    setNewLink({ url: "", title: "", category: "" });
-    setShowAddModal(false);
+  const checkUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+
+      if (user) {
+        fetchLinks(user.id);
+      } else {
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Error checking user:", error);
+      setLoading(false);
+    }
   };
 
-  const handleDeleteLink = (id) => {
-    setLinks(prev => prev.filter(l => l.id !== id));
+  const fetchLinks = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from("Links")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching links:", error);
+      } else {
+        setLinks(data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching links:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Filter links by category
-  const filteredLinks = categoryFilter === "all" 
-    ? links 
-    : links.filter(l => l.category === categoryFilter);
+  const handleAddLink = async () => {
+    if (!newLink.url.trim() || !user) return;
+
+    try {
+      // Extract category from tags array or use the category input
+      const tags = newLink.category.trim() ? [newLink.category.trim()] : [];
+
+      const { data, error } = await supabase
+        .from("Links")
+        .insert([{
+          user_id: user.id,
+          title: newLink.title.trim() || newLink.url.trim(),
+          url: newLink.url.trim(),
+          tags: tags
+        }])
+        .select();
+
+      if (error) {
+        console.error("Error saving link:", error);
+      } else {
+        setLinks([data[0], ...links]);
+        setNewLink({ url: "", title: "", category: "" });
+        setShowAddModal(false);
+      }
+    } catch (error) {
+      console.error("Error saving link:", error);
+    }
+  };
+
+  const handleDeleteLink = async (linkId) => {
+    try {
+      const { error } = await supabase
+        .from("Links")
+        .delete()
+        .eq("id", linkId);
+
+      if (error) {
+        console.error("Error deleting link:", error);
+      } else {
+        setLinks(links.filter(link => link.id !== linkId));
+      }
+    } catch (error) {
+      console.error("Error deleting link:", error);
+    }
+  };
+
+  // Get unique categories from tags array
+  const categories = ["all", ...Array.from(new Set(
+    links.flatMap(l => l.tags || []).filter(Boolean)
+  ))];
+
+  // Filter links by category (checking tags array)
+  const filteredLinks = categoryFilter === "all"
+    ? links
+    : links.filter(l => l.tags && l.tags.includes(categoryFilter));
+
+  if (loading) {
+    return (
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 16px', textAlign: 'center' }}>
+        <div style={{ fontSize: 16, color: '#666' }}>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div style={{ maxWidth: 800, margin: '0 auto', padding: '40px 16px', textAlign: 'center' }}>
+        <div style={{ fontSize: 16, color: '#666' }}>Please log in to manage your links.</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px' }}>
@@ -41,9 +128,9 @@ function LinkVaultWidget() {
         <h2 style={{ margin: '0 0 16px 0', fontSize: 24, fontWeight: 700, color: '#22223b' }}>
           Link Vault
         </h2>
-        
+
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button 
+          <button
             onClick={() => setShowAddModal(true)}
             style={{
               background: '#22223b',
@@ -105,7 +192,7 @@ function LinkVaultWidget() {
           zIndex: 1000,
           padding: 16
         }}
-        onClick={() => setShowAddModal(false)}
+          onClick={() => setShowAddModal(false)}
         >
           <div style={{
             background: '#fff',
@@ -115,7 +202,7 @@ function LinkVaultWidget() {
             width: '100%',
             boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
           }}
-          onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ margin: '0 0 20px 0', fontSize: 20, fontWeight: 700, color: '#22223b' }}>
               Add New Link
@@ -197,7 +284,6 @@ function LinkVaultWidget() {
                   fontSize: 14,
                   fontWeight: 600,
                   cursor: 'pointer'
-                  
                 }}
               >
                 Cancel
@@ -293,18 +379,20 @@ function LinkVaultWidget() {
                     }}>
                       {link.url}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                      <span style={{
-                        background: '#f0f0f5',
-                        color: '#22223b',
-                        padding: '3px 8px',
-                        borderRadius: 4,
-                        fontWeight: 600
-                      }}>
-                        {link.category}
-                      </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, flexWrap: 'wrap' }}>
+                      {link.tags && link.tags.length > 0 && link.tags.map((tag, idx) => (
+                        <span key={idx} style={{
+                          background: '#f0f0f5',
+                          color: '#22223b',
+                          padding: '3px 8px',
+                          borderRadius: 4,
+                          fontWeight: 600
+                        }}>
+                          {tag}
+                        </span>
+                      ))}
                       <span style={{ color: '#999' }}>
-                        Added {new Date(link.dateAdded).toLocaleDateString()}
+                        Added {new Date(link.created_at).toLocaleDateString()}
                       </span>
                     </div>
                   </div>

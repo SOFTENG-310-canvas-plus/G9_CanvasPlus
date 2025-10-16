@@ -1,10 +1,12 @@
+/// <reference lib="deno.ns" />
+
 const MODEL = "gpt-5-nano";
 const MAX_TOKENS = 1000;
 
 /**
  * Main handler, testable in Node by passing `env`.
  */
-export async function handleRequest(req, env) {
+export async function handleRequest(req: Request, env: any) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*", // Replace with frontend URL in prod
     "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -92,11 +94,12 @@ export async function handleRequest(req, env) {
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (err) {
-    return new Response(`Error: ${err.message}`, { status: 500, headers: corsHeaders });
+    const errorMessage = typeof err === "object" && err !== null && "message" in err ? (err as { message: string }).message : String(err);
+    return new Response(`Error: ${errorMessage}`, { status: 500, headers: corsHeaders });
   }
 }
 
 // --- Only call Deno.serve if running in Deno ---
 if (typeof Deno !== "undefined") {
-  Deno.serve((req) => handleRequest(req));
+  Deno.serve((req) => handleRequest(req, {}));
 }

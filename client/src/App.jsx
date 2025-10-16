@@ -14,6 +14,7 @@ import DailyScheduleWidget from "./components/DailyScheduleWidget.jsx";
 import TodoWidget from "./components/TodoWidget.jsx";
 import NotesWidget from './components/NotesWidget';
 import CanvasWidget from "./components/CanvasWidget.jsx";
+import LinkVaultWidget from "./components/LinkVaultWidget.jsx";
 
 
 export default function App() {
@@ -27,7 +28,7 @@ export default function App() {
     { id: "gptWrapper", title: "ChatGPTWrapper", col: 3, row: 4, w: 6, h: 3 },
     { id: "search", title: "Search", col: 7, row: 0, w: 4, h: 1 },
     { id: "canvas", title: "Canvas Tasks", col: 9, row: 3, w: 3, h: 4 },
-
+    { id: "linkVault", title: "Link Vault", col: 14, row: 3, w: 3, h: 4 },
   ]);
 
   const handleMove = useCallback((id, pos) => {
@@ -88,6 +89,7 @@ export default function App() {
             {w.id === "canvas" && <CanvasWidget />}
             {w.id === "schedule" && <DailyScheduleWidget />}
             {w.id === "notes" && <NotesWidget />}
+            {w.id === "linkVault" && <LinkVaultWidget />}
           </Widget>
         ))}
       </WidgetGrid>

@@ -41,10 +41,6 @@ export default function WidgetGrid({
   const clipRef = useRef(null);
   const wallpaperRef = useRef(null);
 
-
-
-
-
   const [widgetColor, setWidgetColor] = useState("#007AFF");
   const [wallpaper, setWallpaper] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -105,7 +101,7 @@ export default function WidgetGrid({
       debounce((payload) => saveUserPreferences(payload).catch(console.error), 300)
   ).current;
 
-  // Recompute cell sizes from the clip’s live size
+  // Recompute cell sizes from the clip's live size
   useLayoutEffect(() => {
     const el = clipRef.current;
     if (!el) return;
@@ -172,21 +168,21 @@ export default function WidgetGrid({
   const handleWallpaperUpload = (e) => {
     const file = e.target.files?.[0];
     if (file?.type.match("image.*")) {
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    const img = ev.target.result;
-    setWallpaper(img);
-    if (user?.id && hydratedRef.current) {
-      debouncedSave({
-        userId: user.id,
-        themeColor: widgetColor,
-        backgroundType: "image",
-        backgroundValue: img,
-      });
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = ev.target.result;
+        setWallpaper(img);
+        if (user?.id && hydratedRef.current) {
+          debouncedSave({
+            userId: user.id,
+            themeColor: widgetColor,
+            backgroundType: "image",
+            backgroundValue: img,
+          });
+        }
+      };
+      reader.readAsDataURL(file);
     }
-  };
-  reader.readAsDataURL(file);
-};
   };
 
   const handleColorChange = (e) => {
@@ -252,119 +248,49 @@ export default function WidgetGrid({
   }, [cols, rows, cw, rh, gap, gridW, gridH, widgetColor]);
 
   return (
-      <GridCtx.Provider value={ctxValue}>
-        <div className="ios-widget-grid-container" ref={containerRef}>
-          <button
-              className="ios-settings-button"
-              onClick={() => setShowSettings((v) => !v)}
-              aria-label="Open settings"
-          >
-            ⚙️
-          </button>
+    <GridCtx.Provider value={ctxValue}>
+      <div className="ios-widget-grid-container" ref={containerRef}>
+        <button
+          className="ios-settings-button"
+          onClick={() => setShowSettings((v) => !v)}
+          aria-label="Open settings"
+        >
+          ⚙️
+        </button>
 
-          {showSettings && (
-              <div className="ios-settings-panel">
-                <h3>Customize Widgets</h3>
+        {showSettings && (
+          <div className="ios-settings-panel">
+            <h3>Customize Widgets</h3>
 
-                {/* User Info Section */}
-                {user && (
-                  <div className="ios-setting-group ios-user-info">
-                    <div className="ios-user-avatar">
-                      {user.email?.charAt(0).toUpperCase() || 'U'}
-                    </div>
-                    <div className="ios-user-details">
-                      <div className="ios-user-name">
-                        {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
-                      </div>
-                      <div className="ios-user-email">{user.email}</div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="ios-setting-group">
-                  <label htmlFor="wg-color">Widget Color</label>
-                  <input
-                      id="wg-color"
-                      type="color"
-                      value={widgetColor}
-                      onChange={handleColorChange}
-                      className="ios-color-picker"
-                  />
-                  <div
-                      className="color-preview"
-                      style={{ backgroundColor: widgetColor }}
-                  >
-                    {widgetColor}
-                  </div>
+            {/* User Info Section */}
+            {user && (
+              <div className="ios-setting-group ios-user-info">
+                <div className="ios-user-avatar">
+                  {user.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
-
-                <div className="ios-setting-group">
-                  <label htmlFor="wg-wallpaper">Wallpaper</label>
-                  <input
-                      id="wg-wallpaper"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleWallpaperUpload}
-                      className="ios-wallpaper-upload"
-                  />
+                <div className="ios-user-details">
+                  <div className="ios-user-name">
+                    {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+                  </div>
+                  <div className="ios-user-email">{user.email}</div>
                 </div>
+              </div>
+            )}
 
-                {/* Logout Button */}
-                {user && (
-                  <button
-                    className="ios-logout-button"
-                    onClick={signOut}
-                    disabled={isLoggingOut}
-                    aria-label="Log out"
-                  >
-                    <svg
-                      className="ios-logout-icon"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M16 17L21 12L16 7"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M21 12H9"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    {isLoggingOut ? (
-                      <>
-                        <span className="ios-logout-spinner" aria-hidden="true"></span>
-                        <span>Logging out...</span>
-                      </>
-                    ) : (
-                      <span>Log Out</span>
-                    )}
-                  </button>
-                )}
-
-                <button
-                    className="ios-close-settings"
-                    onClick={() => setShowSettings(false)}
-                >
-                  Close
-                </button>
+            <div className="ios-setting-group">
+              <label htmlFor="wg-color">Widget Color</label>
+              <input
+                id="wg-color"
+                type="color"
+                value={widgetColor}
+                onChange={handleColorChange}
+                className="ios-color-picker"
+              />
+              <div
+                className="color-preview"
+                style={{ backgroundColor: widgetColor }}
+              >
+                {widgetColor}
               </div>
             </div>
 
@@ -398,6 +324,56 @@ export default function WidgetGrid({
                 Reset Layout
               </button>
             </div>
+
+            {/* Logout Button */}
+            {user && (
+              <button
+                className="ios-logout-button"
+                onClick={signOut}
+                disabled={isLoggingOut}
+                aria-label="Log out"
+              >
+                <svg
+                  className="ios-logout-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M16 17L21 12L16 7"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M21 12H9"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                {isLoggingOut ? (
+                  <>
+                    <span className="ios-logout-spinner" aria-hidden="true"></span>
+                    <span>Logging out...</span>
+                  </>
+                ) : (
+                  <span>Log Out</span>
+                )}
+              </button>
+            )}
 
             <button
               className="ios-close-settings"

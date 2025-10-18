@@ -3,154 +3,199 @@
 // =============================
 
 import React, { useState, useCallback, useEffect } from "react";
-import WidgetGrid, { Widget } from "./components/WidgetGrid.jsx";
+import WidgetGrid from "./components/widget-grid/WidgetGrid.jsx";
+import Widget from "./components/widget-grid/Widget.jsx";
 import useGoogleCalendarEvents from "./hooks/useGoogleCalendarEvents";
+import useWidgetLayout from "./hooks/useWidgetLayout";
+import { supabase } from "./auth/supabaseClient.js";
 
-import WeatherWidget from "./components/WeatherWidget.jsx"
-import GptWrapper from "./components/GptWrapper.jsx"
+import WeatherWidget from "./components/WeatherWidget.jsx";
+import GptWrapper from "./components/GptWrapper.jsx";
 import ClockWidget from "./components/ClockWidget.jsx";
-import SearchWidget from "./components/SearchWidget.jsx"
+import SearchWidget from "./components/SearchWidget.jsx";
 import DailyScheduleWidget from "./components/DailyScheduleWidget.jsx";
 import TodoWidget from "./components/TodoWidget.jsx";
 import NotesWidget from './components/NotesWidget';
 import CanvasWidget from "./components/CanvasWidget.jsx";
+import LinkVaultWidget from "./components/LinkVaultWidget.jsx";
 
-export default function App() {
-  const [viewport, setViewport] = useState('desktop');
-  
-  // Determine viewport
-  useEffect(() => {
-    const updateViewport = () => {
-      const width = window.innerWidth;
-      if (width < 480) setViewport('xs');
-      else if (width < 640) setViewport('sm');
-      else if (width < 768) setViewport('md');
-      else if (width < 1024) setViewport('lg');
-      else if (width < 1280) setViewport('xl');
-      else setViewport('2xl');
-    };
+const SIGN_IN_BUTTON_STYLE = {
+  background: '#6366f1',
+  color: 'white',
+  border: 'none',
+  borderRadius: 8,
+  padding: '8px 18px',
+  fontWeight: 600,
+  fontSize: 15,
+  cursor: 'pointer',
+  marginTop: 8
+};
 
-    updateViewport();
-    window.addEventListener('resize', updateViewport);
-    return () => window.removeEventListener('resize', updateViewport);
-  }, []);
+// Extract calendar content into separate component
+const CalendarWidgetContent = ({ calLoading, needsAuth, error, events, signIn }) => {
+  if (calLoading) {
+    return <div>Loading events...</div>;
+  }
 
-  // Responsive widget configurations
-  const getResponsiveWidgets = () => {
-    // Mobile (xs, sm): Single column, stacked
-    if (viewport === 'xs' || viewport === 'sm') {
-      return [
-        { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2 },
-        { id: "clock", title: "Clock", col: 0, row: 2, w: 2, h: 2 },
-        { id: "search", title: "Search", col: 0, row: 4, w: 2, h: 1 },
-        { id: "calendar", title: "Calendar", col: 0, row: 5, w: 2, h: 3 },
-        { id: "todo", title: "TODO List", col: 0, row: 8, w: 2, h: 4 },
-        { id: "notes", title: "Notes", col: 0, row: 12, w: 2, h: 3 },
-        { id: "schedule", title: "Daily Schedule", col: 0, row: 15, w: 2, h: 4 },
-        { id: "canvas", title: "Canvas Tasks", col: 0, row: 19, w: 2, h: 4 },
-        { id: "gptWrapper", title: "ChatGPT", col: 0, row: 23, w: 2, h: 3 },
-      ];
-    }
-    
-    // Tablet (md, lg): Two columns
-    if (viewport === 'md' || viewport === 'lg') {
-      return [
-        { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2 },
-        { id: "clock", title: "Clock", col: 2, row: 0, w: 2, h: 2 },
-        { id: "search", title: "Search", col: 0, row: 2, w: 4, h: 1 },
-        { id: "calendar", title: "Calendar", col: 0, row: 3, w: 3, h: 3 },
-        { id: "todo", title: "TODO List", col: 3, row: 3, w: 3, h: 4 },
-        { id: "notes", title: "Notes", col: 0, row: 6, w: 3, h: 3 },
-        { id: "schedule", title: "Daily Schedule", col: 3, row: 7, w: 3, h: 4 },
-        { id: "canvas", title: "Canvas Tasks", col: 0, row: 9, w: 3, h: 4 },
-        { id: "gptWrapper", title: "ChatGPT", col: 3, row: 11, w: 3, h: 3 },
-      ];
-    }
-    
-    // Desktop (xl, 2xl): Full grid
-    return [
-      { id: "weather", title: "Weather", col: 0, row: 0, w: 2, h: 2 },
-      { id: "clock", title: "Clock", col: 0, row: 5, w: 5, h: 2 },
-      { id: "calendar", title: "Calendar", col: 3, row: 0, w: 4, h: 3 },
-      { id: "todo", title: "TODO List", col: 7, row: 0, w: 3, h: 4 },
-      { id: "schedule", title: "Daily Schedule", col: 10, row: 0, w: 4, h: 4.2 },
-      { id: "notes", title: "Notes", col: 0, row: 2, w: 3, h: 3 },
-      { id: "gptWrapper", title: "ChatGPT", col: 3, row: 4, w: 6, h: 3 },
-      { id: "search", title: "Search", col: 7, row: 0, w: 4, h: 1 },
-      { id: "canvas", title: "Canvas Tasks", col: 9, row: 3, w: 3, h: 4 },
-    ];
-  };
-
-  const [widgets, setWidgets] = useState(getResponsiveWidgets());
-
-  // Update widgets when viewport changes
-  useEffect(() => {
-    setWidgets(getResponsiveWidgets());
-  }, [viewport]);
-
-  const handleMove = useCallback((id, pos) => {
-    setWidgets((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, col: pos.col, row: pos.row } : w))
+  if (needsAuth) {
+    return (
+      <div>
+        <button onClick={signIn} style={SIGN_IN_BUTTON_STYLE}>
+          Sign in to Google Calendar
+        </button>
+      </div>
     );
-  }, []);
+  }
 
-  const { events, loading, error, needsAuth, signIn } = useGoogleCalendarEvents();
+  if (error) {
+    return <div style={{ color: 'salmon' }}>Error: {error}</div>;
+  }
+
+  if (!events || events.length === 0) {
+    return <div>No upcoming events</div>;
+  }
 
   return (
-    <WidgetGrid cols={17} rows={8} cellW={96} rowH={96} gap={16} showGrid>
-      {widgets.map((w) => (
+    <ul style={{ margin: 0, paddingLeft: 16 }}>
+      {events.map(ev => (
+        <li key={ev.id}>
+          {ev.summary || '(no title)'} ({ev.start?.dateTime?.slice(11, 16) || ev.start?.date})
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [zIndexMap, setZIndexMap] = useState({});
+  const [maxZIndex, setMaxZIndex] = useState(1);
+
+  // Auth
+  useEffect(() => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user || null);
+    });
+    supabase.auth.getUser().then(({ data }) => setUser(data?.user || null));
+    return () => sub?.subscription?.unsubscribe?.();
+  }, []);
+
+  // Layout management with responsive breakpoints
+  const { layout, loading, updateLayout, resetLayout, currentBreakpoint } = useWidgetLayout(user);
+
+  // Calendar hook
+  const { events, loading: calLoading, error, needsAuth, signIn } = useGoogleCalendarEvents();
+
+  const handleMove = useCallback((id, pos) => {
+    const updated = layout.map((w) =>
+      w.id === id ? { ...w, col: pos.col, row: pos.row } : w
+    );
+    updateLayout(updated);
+  }, [layout, updateLayout]);
+
+  const handleResize = useCallback((id, dimensions) => {
+    const updated = layout.map((w) =>
+      w.id === id ? { ...w, ...dimensions } : w
+    );
+    updateLayout(updated);
+  }, [layout, updateLayout]);
+
+  const handleBringToFront = useCallback((id) => {
+    setMaxZIndex(prev => {
+      const newMax = prev + 1;
+      setZIndexMap(prevMap => ({ ...prevMap, [id]: newMax }));
+      return newMax;
+    });
+  }, []);
+
+  // Show loading screen while fetching layout from Supabase
+  if (loading) {
+    return (
+      <div style={{ 
+        padding: 20, 
+        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        fontSize: 'clamp(14px, 3vw, 16px)'
+      }}>
+        Loading dashboard...
+      </div>
+    );
+  }
+
+  // Get responsive columns based on breakpoint
+  let cols;
+  switch (currentBreakpoint) {
+    case 'xs':
+      cols = 2;
+      break;
+    case 'sm':
+      cols = 4;
+      break;
+    case 'md':
+      cols = 6;
+      break;
+    case 'lg':
+      cols = 8;
+      break;
+    case 'xl':
+      cols = 12;
+      break;
+    case '2xl':
+    default:
+      cols = 17;
+      break;
+  }
+
+  return (
+    <WidgetGrid 
+      cols={cols}
+      rows={8} 
+      cellW={96} 
+      rowH={96} 
+      gap={16} 
+      showGrid={false}
+      onResetLayout={resetLayout}
+    >
+      {layout.map((w) => (
         <Widget
           key={w.id}
           id={w.id}
-          title={w.title}
+          title={w.title || w.id}
           col={w.col}
           row={w.row}
           w={w.w}
           h={w.h}
+          minW={w.minW}
+          minH={w.minH}
+          maxW={w.maxW}
+          maxH={w.maxH}
           color={w.color}
+          zIndex={zIndexMap[w.id] || 1}
           onMove={handleMove}
+          onResize={handleResize}
+          onBringToFront={handleBringToFront}
         >
           {w.id === "weather" && <WeatherWidget />}
           {w.id === "search" && <SearchWidget />}
           {w.id === "clock" && <ClockWidget />}
           {w.id === "gptWrapper" && <GptWrapper />}
           {w.id === "calendar" && (
-            loading ? (
-              <div>Loading events...</div>
-            ) : needsAuth ? (
-              <div style={{ padding: 'var(--space-4)', textAlign: 'center' }}>
-                <button onClick={signIn} style={{
-                  background: '#6366f1', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: 8, 
-                  padding: 'var(--space-3) var(--space-4)', 
-                  fontWeight: 600, 
-                  fontSize: 'var(--font-sm)', 
-                  cursor: 'pointer',
-                  minHeight: 'var(--touch-target-min)',
-                  width: '100%'
-                }}>Sign in to Google Calendar</button>
-              </div>
-            ) : error ? (
-              <div style={{ color: 'salmon', padding: 'var(--space-4)' }}>Error: {error}</div>
-            ) : (!events || events.length === 0) ? (
-              <div style={{ padding: 'var(--space-4)' }}>No upcoming events</div>
-            ) : (
-              <ul style={{ margin: 0, paddingLeft: 'var(--space-4)', fontSize: 'var(--font-sm)' }}>
-                {events.map(ev => (
-                  <li key={ev.id} style={{ marginBottom: 'var(--space-2)' }}>
-                    {ev.summary || '(no title)'} ({ev.start?.dateTime?.slice(11, 16) || ev.start?.date})
-                  </li>
-                ))}
-              </ul>
-            )
+            <CalendarWidgetContent 
+              calLoading={calLoading}
+              needsAuth={needsAuth}
+              error={error}
+              events={events}
+              signIn={signIn}
+            />
           )}
-
           {w.id === "todo" && <TodoWidget />}
           {w.id === "canvas" && <CanvasWidget />}
           {w.id === "schedule" && <DailyScheduleWidget />}
           {w.id === "notes" && <NotesWidget />}
+          {w.id === "linkVault" && <LinkVaultWidget />}
         </Widget>
       ))}
     </WidgetGrid>

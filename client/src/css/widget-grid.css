@@ -344,6 +344,116 @@
   font-weight: 500;
 }
 
+/* User Info Section */
+.ios-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.ios-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.ios-user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.ios-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ios-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ios-user-email {
+  font-size: 12px;
+  color: var(--ios-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Logout Button */
+.ios-logout-button {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  background: rgba(255, 59, 48, 0.15);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  color: #FF3B30;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ios-logout-button:hover:not(:disabled) {
+  background: rgba(255, 59, 48, 0.25);
+  border-color: rgba(255, 59, 48, 0.5);
+  transform: translateY(-1px);
+}
+
+.ios-logout-button:active:not(:disabled) {
+  background: rgba(255, 59, 48, 0.3);
+  transform: translateY(0);
+}
+
+.ios-logout-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ios-logout-icon {
+  flex-shrink: 0;
+}
+
+.ios-logout-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 59, 48, 0.3);
+  border-top-color: #FF3B30;
+  border-radius: 50%;
+  animation: ios-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ios-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios-logout-spinner {
+    animation: none;
+    border-top-color: transparent;
+  }
+}
+
+
 .ios-color-picker {
   width: 100%;
   height: 40px;
@@ -413,8 +523,121 @@
   transform: none !important;
 }
 
-/* Ensure no horizontal scroll */
-body {
-  overflow-x: hidden;
-  max-width: 100vw;
+
+/* Add these styles to your existing client/css/widget-grid.css */
+
+/* Resize handles */
+.ios-resize-handle {
+  position: absolute;
+  z-index: 100;
+  width: 12px;
+  height: 12px;
+  background: var(--accent-color, #007AFF);
+  border: 2px solid white;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.ios-widget:hover .ios-resize-handle,
+.ios-widget:focus-within .ios-resize-handle {
+  opacity: 1;
+}
+
+.ios-resize-se {
+  bottom: -6px;
+  right: -6px;
+  cursor: nwse-resize;
+}
+
+.ios-resize-ne {
+  top: -6px;
+  right: -6px;
+  cursor: nesw-resize;
+}
+
+.ios-resize-sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: nesw-resize;
+}
+
+.ios-resize-nw {
+  top: -6px;
+  left: -6px;
+  cursor: nwse-resize;
+}
+
+/* Active resize state */
+.ios-resize-handle:active {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* Ghost widget during resize */
+.ios-widget-ghost {
+  position: absolute;
+  border: 2px dashed;
+  border-radius: 16px;
+  background: rgba(0, 122, 255, 0.1);
+  pointer-events: none;
+  z-index: 999;
+  transition: none;
+}
+
+/* Widget being dragged/resized */
+.ios-widget.dragging {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Prevent text selection during drag/resize */
+body.dragging,
+body.resizing {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Grid guidelines (optional enhancement) */
+.ios-widget-grid.show-grid::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent calc(var(--cell-height) + var(--grid-gap) - 1px),
+      rgba(255, 255, 255, 0.1) calc(var(--cell-height) + var(--grid-gap) - 1px),
+      rgba(255, 255, 255, 0.1) calc(var(--cell-height) + var(--grid-gap))
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent calc(var(--cell-width) + var(--grid-gap) - 1px),
+      rgba(255, 255, 255, 0.1) calc(var(--cell-width) + var(--grid-gap) - 1px),
+      rgba(255, 255, 255, 0.1) calc(var(--cell-width) + var(--grid-gap))
+    );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ios-widget-grid.show-grid:hover::before,
+.ios-widget.dragging ~ .ios-widget-grid::before {
+  opacity: 1;
+}
+
+/* Accessibility: Focus styles for resize handles */
+.ios-resize-handle:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+  opacity: 1;
 }

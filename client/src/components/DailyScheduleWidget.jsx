@@ -1,11 +1,33 @@
 import React from "react";
+import AddTaskModal from "./DailySchedule/AddTaskModal";
+import TaskCard from "./DailySchedule/TaskCard";
+import { computeTaskLayoutWithLanes } from "../utils/laneAllocator";
 
 function DailyScheduleWidget() {
-  // Scroll to the next incomplete activity (not done, and in the future) on mount
-  // If none, scroll to the first incomplete activity. If none, scroll to top.
+  const timelineRef = React.useRef(null);
+  const [activities, setActivities] = React.useState([
+    { id: 2, title: 'Wake up', start: 420, end: 435, done: false },
+    { id: 3, title: 'Gym', start: 450, end: 510, done: false },
+    { id: 4, title: 'Cook', start: 540, end: 570, done: false },
+    { id: 5, title: 'Read', start: 600, end: 660, done: false },
+    { id: 6, title: 'Lunch', start: 720, end: 750, done: false },
+    { id: 7, title: 'Study', start: 780, end: 1020, done: false },
+    { id: 8, title: 'Dinner', start: 1080, end: 1110, done: false },
+    { id: 9, title: 'Relax', start: 1140, end: 1260, done: false },
+    { id: 10, title: 'Sleep', start: 1380, end: 1410, done: false },
+  ]);
+  const [showModal, setShowModal] = React.useState(false);
+  const [modalTitle, setModalTitle] = React.useState('');
+  const [modalTime, setModalTime] = React.useState('');
+  const [modalDuration, setModalDuration] = React.useState('30');
+  const [holdId, setHoldId] = React.useState(null);
+  const [holdProgress, setHoldProgress] = React.useState(0);
+  const holdInterval = React.useRef(null);
+  const holdTimeout = React.useRef(null);
+
+  // Scroll to the next incomplete activity on mount
   React.useEffect(() => {
     if (!timelineRef.current) return;
-    // Find the next incomplete activity (not done, and start > now)
     const now = new Date();
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
     let next = null;
@@ -21,48 +43,21 @@ function DailyScheduleWidget() {
     }
     const target = next || firstIncomplete;
     if (target) {
-      // Scroll so that the activity is near the top (with a little offset)
       const pxPerMinute = 1.8;
-      const timelineStart = 0;
-      const windowMinutes = 3 * 60;
-      const windowHeight = windowMinutes * pxPerMinute;
-      const y = (target.start - timelineStart) * pxPerMinute;
-      const scrollTop = Math.max(0, y - 30); // 30px offset from top
+      const y = target.start * pxPerMinute;
+      const scrollTop = Math.max(0, y - 30);
       timelineRef.current.scrollTop = scrollTop;
     } else {
       timelineRef.current.scrollTop = 0;
     }
-    // Only run on mount
     // eslint-disable-next-line
   }, []);
   
-  const timelineRef = React.useRef(null);
-  const [activities, setActivities] = React.useState([
-    { id: 2, title: 'Wake up', start: 420, end: 435, done: false }, // 07:00 - 07:15
-    { id: 3, title: 'Gym', start: 450, end: 510, done: false }, // 07:30 - 08:30
-    { id: 4, title: 'Cook', start: 540, end: 570, done: false }, // 09:00 - 09:30
-    { id: 5, title: 'Read', start: 600, end: 660, done: false }, // 10:00 - 11:00
-    { id: 6, title: 'Lunch', start: 720, end: 750, done: false }, // 12:00 - 12:30
-    { id: 7, title: 'Study', start: 780, end: 1020, done: false }, // 13:00 - 17:00
-    { id: 8, title: 'Dinner', start: 1080, end: 1110, done: false }, // 18:00 - 18:30
-    { id: 9, title: 'Relax', start: 1140, end: 1260, done: false }, // 19:00 - 21:00
-    { id: 10, title: 'Sleep', start: 1380, end: 1410, done: false }, // 23:00 - 23:30
-  ]);
-  const [showModal, setShowModal] = React.useState(false);
-  const [modalTitle, setModalTitle] = React.useState('');
-  const [modalTime, setModalTime] = React.useState('');
-  const [modalDuration, setModalDuration] = React.useState(30);
-  const [holdId, setHoldId] = React.useState(null);
-  const [holdProgress, setHoldProgress] = React.useState(0);
-  const holdInterval = React.useRef(null);
-  const holdTimeout = React.useRef(null);
-
-  // --- Full 24-hour timeline, scrollable, with 4-hour window centered on now ---
   const now = new Date();
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const timelineStart = 0;
   const timelineEnd = 24 * 60;
-  const timelineStep = 60; // 1 hour
+  const timelineStep = 60;
   const timelineLabels = [];
   for (let t = timelineStart; t <= timelineEnd; t += timelineStep) {
     let h = Math.floor((t + 24 * 60) % (24 * 60) / 60);
@@ -71,14 +66,12 @@ function DailyScheduleWidget() {
       y: t
     });
   }
-  // Timeline height for 24 hours, window height for 4 hours
-  // Make each hour slot bigger: 1.8px per minute (108px per hour)
+  
   const pxPerMinute = 1.8;
-  const timelineHeight = 24 * 60 * pxPerMinute; // 2592px
+  const timelineHeight = 24 * 60 * pxPerMinute;
   const windowMinutes = 3 * 60;
-  const windowHeight = windowMinutes * pxPerMinute; // 324px
+  const windowHeight = windowMinutes * pxPerMinute;
   const timelineWidth = 320;
-  const totalMinutes = timelineEnd - timelineStart;
   
   function timeToY(minutes) {
     return (minutes - timelineStart) * pxPerMinute;
@@ -95,22 +88,42 @@ function DailyScheduleWidget() {
 
   const handleAddActivity = (e) => {
     e.preventDefault();
-    const startTime = modalTime.split(':');
-    const start = parseInt(startTime[0]) * 60 + parseInt(startTime[1]);
-    const end = start + parseInt(modalDuration);
+    const [hours, minutes] = modalTime.split(':').map(Number);
+    const startMinutes = hours * 60 + minutes;
+    const durationNum = parseInt(modalDuration, 10);
+    const endMinutes = startMinutes + durationNum;
+    
     const newActivity = {
-      id: Math.random(), // temporary ID, replace with proper ID generation
+      id: Date.now(),
       title: modalTitle,
-      start,
-      end,
+      start: startMinutes,
+      end: endMinutes,
       done: false
     };
-    setActivities(acts => [...acts, newActivity]);
-    setShowModal(false);
+    
+    setActivities(acts => [...acts, newActivity].sort((a, b) => a.start - b.start));
+    
+    // Reset modal
     setModalTitle('');
     setModalTime('');
-    setModalDuration(30);
+    setModalDuration('30');
+    setShowModal(false);
   };
+
+  // Compute lane layout for tasks to prevent visual overlap
+  const tasksWithLayout = React.useMemo(() => {
+    const dayMinutes = timelineEnd - timelineStart;
+    const containerWidth = timelineWidth - 80;
+    const gutterPx = 4;
+
+    return computeTaskLayoutWithLanes(
+      activities,
+      dayMinutes,
+      containerWidth,
+      pxPerMinute,
+      gutterPx
+    );
+  }, [activities, timelineWidth, pxPerMinute, timelineStart, timelineEnd]);
 
   return (
     <div style={{ 
@@ -127,11 +140,7 @@ function DailyScheduleWidget() {
       boxSizing: 'border-box',
     }}>
       {/* Add Activity Button */}
-      <div style={{ 
-        padding: '12px 14px 10px 14px', 
-        display: 'flex', 
-        justifyContent: 'flex-end' 
-      }}>
+      <div style={{ padding: '12px 14px 10px 14px', display: 'flex', justifyContent: 'flex-end' }}>
         <button 
           onClick={() => setShowModal(true)} 
           style={{ 
@@ -141,18 +150,16 @@ function DailyScheduleWidget() {
             borderRadius: 7, 
             padding: '6px 16px', 
             fontWeight: 600, 
-            fontSize: 'clamp(12px, 2.5vw, 13px)', 
+            fontSize: 13, 
             cursor: 'pointer', 
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            minHeight: 44,
-            minWidth: 44,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)' 
           }}
         >
           Add Activity
         </button>
       </div>
       
-      {/* Timeline container with grid, scrollable, flex layout for time labels */}
+      {/* Timeline container */}
       <div 
         ref={timelineRef} 
         style={{ 
@@ -218,7 +225,7 @@ function DailyScheduleWidget() {
             }} />
           ))}
           
-          {/* Timeline vertical line (full height) */}
+          {/* Timeline vertical line */}
           <div style={{ 
             position: 'absolute', 
             left: 0, 
@@ -245,14 +252,14 @@ function DailyScheduleWidget() {
           {activities.map(act => {
             const isLate = !act.done && nowMinutes > act.start + 10;
             if (!(act.start >= timelineStart && act.start < timelineEnd)) return null;
+            
             return (
               <div key={act.id} style={{
                 position: 'absolute',
                 left: 28,
                 top: timeToY(act.start),
                 height: Math.max(44, timeToY(act.end) - timeToY(act.start)),
-                width: 'calc(100% - 80px)',
-                maxWidth: timelineWidth - 80,
+                width: timelineWidth - 80,
                 background: act.done ? '#e0f2fe' : isLate ? '#fecaca' : '#fbbf24',
                 color: act.done ? '#888' : isLate ? '#b91c1c' : '#222',
                 borderRadius: 7,
@@ -261,10 +268,9 @@ function DailyScheduleWidget() {
                 alignItems: 'center',
                 padding: '0 8px',
                 fontWeight: 500,
-                fontSize: 'clamp(12px, 2.5vw, 13px)',
+                fontSize: 13,
                 zIndex: 2,
-                border: isLate ? '2px solid #ef4444' : undefined,
-                boxSizing: 'border-box',
+                border: isLate ? '2px solid #ef4444' : undefined
               }} title={act.title}>
                 <button
                   type="button"
@@ -297,28 +303,6 @@ function DailyScheduleWidget() {
                     setHoldProgress(0);
                     setHoldId(null);
                   }}
-                  onTouchStart={() => {
-                    if (act.done) return;
-                    setHoldId(act.id);
-                    setHoldProgress(0);
-                    let progress = 0;
-                    holdInterval.current = setInterval(() => {
-                      progress += 100 / 9;
-                      setHoldProgress(progress);
-                    }, 100);
-                    holdTimeout.current = setTimeout(() => {
-                      clearInterval(holdInterval.current);
-                      setHoldProgress(100);
-                      handleTickActivity(act.id);
-                      setHoldId(null);
-                    }, 1000);
-                  }}
-                  onTouchEnd={() => {
-                    clearTimeout(holdTimeout.current);
-                    clearInterval(holdInterval.current);
-                    setHoldProgress(0);
-                    setHoldId(null);
-                  }}
                   style={{
                     width: 36,
                     height: 36,
@@ -335,20 +319,36 @@ function DailyScheduleWidget() {
                     position: 'relative',
                     outline: 'none',
                     transition: 'background 0.2s, border 0.2s',
-                    boxShadow: undefined,
                     padding: 0,
                     overflow: 'visible',
-                    flexShrink: 0,
                   }}
                   disabled={act.done}
                 >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke={act.done ? '#fff' : '#22c55e'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: act.done ? 1 : 0.8, display: 'block' }}>
+                  <svg 
+                    width="20" 
+                    height="20" 
+                    viewBox="0 0 20 20" 
+                    fill="none" 
+                    stroke={act.done ? '#fff' : '#22c55e'} 
+                    strokeWidth="2.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    style={{ opacity: act.done ? 1 : 0.8, display: 'block' }}
+                  >
                     <polyline points="5 11 9 15 15 7" />
                   </svg>
                   {holdId === act.id && !act.done && (
-                    <svg width="40" height="40" style={{ position: 'absolute', top: -4, left: -4, pointerEvents: 'none', zIndex: 1 }}>
+                    <svg width="40" height="40" style={{ 
+                      position: 'absolute', 
+                      top: -4, 
+                      left: -4, 
+                      pointerEvents: 'none', 
+                      zIndex: 1 
+                    }}>
                       <circle
-                        cx="20" cy="20" r="17"
+                        cx="20" 
+                        cy="20" 
+                        r="17"
                         stroke="#22c55e"
                         strokeWidth="3.5"
                         fill="none"
@@ -363,14 +363,7 @@ function DailyScheduleWidget() {
                     </svg>
                   )}
                 </button>
-                <span style={{ 
-                  fontWeight: 700, 
-                  marginRight: 8,
-                  wordWrap: 'break-word',
-                  overflowWrap: 'break-word',
-                  flex: 1,
-                  minWidth: 0,
-                }}>
+                <span style={{ fontWeight: 700, marginRight: 8 }}>
                   {act.title}
                   {isLate && (
                     <span style={{
@@ -378,22 +371,15 @@ function DailyScheduleWidget() {
                       background: '#fee2e2',
                       borderRadius: 5,
                       fontWeight: 800,
-                      fontSize: 'clamp(10px, 2vw, 11px)',
+                      fontSize: 11,
                       marginLeft: 8,
                       padding: '2px 7px',
                       letterSpacing: 0.5,
                       verticalAlign: 'middle',
-                      whiteSpace: 'nowrap',
                     }}>Late</span>
                   )}
                 </span>
-                <span style={{ 
-                  marginLeft: 'auto', 
-                  fontSize: 'clamp(10px, 2vw, 11px)', 
-                  opacity: 0.8,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}>
+                <span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.8 }}>
                   {`${String(Math.floor(act.start / 60)).padStart(2, '0')}:${String(act.start % 60).padStart(2, '0')}`} - {`${String(Math.floor(act.end / 60)).padStart(2, '0')}:${String(act.end % 60).padStart(2, '0')}`}
                 </span>
               </div>
@@ -414,18 +400,15 @@ function DailyScheduleWidget() {
           zIndex: 1000, 
           display: 'flex', 
           alignItems: 'center', 
-          justifyContent: 'center',
-          padding: 16,
+          justifyContent: 'center'
         }}>
           <div style={{ 
             background: '#fff', 
             borderRadius: 10, 
             padding: 18, 
-            width: '100%',
-            maxWidth: 320,
+            minWidth: 220, 
             boxShadow: '0 4px 24px rgba(0,0,0,0.10)', 
-            position: 'relative',
-            boxSizing: 'border-box',
+            position: 'relative' 
           }}>
             <button 
               onClick={() => setShowModal(false)} 
@@ -437,12 +420,7 @@ function DailyScheduleWidget() {
                 border: 'none', 
                 fontSize: 18, 
                 color: '#888', 
-                cursor: 'pointer',
-                minWidth: 44,
-                minHeight: 44,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                cursor: 'pointer' 
               }} 
               title="Close"
             >
@@ -452,7 +430,7 @@ function DailyScheduleWidget() {
               margin: 0, 
               marginBottom: 12, 
               fontWeight: 700, 
-              fontSize: 'clamp(14px, 3vw, 15px)', 
+              fontSize: 15, 
               color: '#22223b' 
             }}>
               Add Activity
@@ -462,7 +440,7 @@ function DailyScheduleWidget() {
                 <label 
                   htmlFor="activity-title" 
                   style={{ 
-                    fontSize: 'clamp(10px, 2.5vw, 11px)', 
+                    fontSize: 11, 
                     fontWeight: 600, 
                     color: '#22223b', 
                     marginBottom: 3, 
@@ -482,10 +460,8 @@ function DailyScheduleWidget() {
                     padding: '6px 8px', 
                     borderRadius: 5, 
                     border: '1.5px solid #e5e7eb', 
-                    fontSize: 'clamp(11px, 2.5vw, 12px)', 
-                    outline: 'none',
-                    minHeight: 44,
-                    boxSizing: 'border-box',
+                    fontSize: 12, 
+                    outline: 'none' 
                   }} 
                 />
               </div>
@@ -493,7 +469,7 @@ function DailyScheduleWidget() {
                 <label 
                   htmlFor="start-time" 
                   style={{ 
-                    fontSize: 'clamp(10px, 2.5vw, 11px)', 
+                    fontSize: 11, 
                     fontWeight: 600, 
                     color: '#22223b', 
                     marginBottom: 3, 
@@ -513,10 +489,8 @@ function DailyScheduleWidget() {
                     padding: '6px 8px', 
                     borderRadius: 5, 
                     border: '1.5px solid #e5e7eb', 
-                    fontSize: 'clamp(11px, 2.5vw, 12px)', 
-                    outline: 'none',
-                    minHeight: 44,
-                    boxSizing: 'border-box',
+                    fontSize: 12, 
+                    outline: 'none' 
                   }} 
                 />
               </div>
@@ -524,7 +498,7 @@ function DailyScheduleWidget() {
                 <label 
                   htmlFor="duration-minutes" 
                   style={{ 
-                    fontSize: 'clamp(10px, 2.5vw, 11px)', 
+                    fontSize: 11, 
                     fontWeight: 600, 
                     color: '#22223b', 
                     marginBottom: 3, 
@@ -547,10 +521,8 @@ function DailyScheduleWidget() {
                     padding: '6px 8px', 
                     borderRadius: 5, 
                     border: '1.5px solid #e5e7eb', 
-                    fontSize: 'clamp(11px, 2.5vw, 12px)', 
-                    outline: 'none',
-                    minHeight: 44,
-                    boxSizing: 'border-box',
+                    fontSize: 12, 
+                    outline: 'none' 
                   }} 
                 />
               </div>
@@ -564,11 +536,10 @@ function DailyScheduleWidget() {
                   color: '#fff', 
                   border: 'none', 
                   fontWeight: 700, 
-                  fontSize: 'clamp(12px, 2.5vw, 13px)', 
+                  fontSize: 13, 
                   letterSpacing: 0.2, 
                   cursor: 'pointer', 
-                  transition: 'background 0.2s',
-                  minHeight: 44,
+                  transition: 'background 0.2s' 
                 }}
               >
                 Add

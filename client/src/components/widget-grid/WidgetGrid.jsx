@@ -1,4 +1,4 @@
-// client/src/components/WidgetGrid.jsx
+// client/src/components/widget-grid/WidgetGrid.jsx
 import React, {
   useMemo,
   useRef,
@@ -11,7 +11,6 @@ import {
   getUserPreferences,
   saveUserPreferences,
 } from "../../api/preferences.js";
-// NOTE: adjust the import path to your supabase client if needed
 import { supabase } from "../../auth/supabaseClient.js";
 import { GRID_CONFIG } from '../../config/widgetLayoutDefaults';
 
@@ -45,6 +44,9 @@ export default function WidgetGrid({
   const [wallpaper, setWallpaper] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [user, setUser] = useState(null);
+  
+  // Logout hook
+  const { signOut, isLoading: isLoggingOut } = useSignOut();
 
   const [cw, setCw] = useState(cellW);
   const [rh, setRh] = useState(rowH);
@@ -96,7 +98,7 @@ export default function WidgetGrid({
       debounce((payload) => saveUserPreferences(payload).catch(console.error), 300)
   ).current;
 
-  // Recompute cell sizes from the clip’s live size
+  // Recompute cell sizes from the clip's live size
   useLayoutEffect(() => {
     const el = clipRef.current;
     if (!el) return;
@@ -113,10 +115,8 @@ export default function WidgetGrid({
       setRh(nextRh);
     };
 
-    // Run now
     recompute();
 
-    // Watch size changes
     const ro = new ResizeObserver(recompute);
     ro.observe(el);
 
@@ -164,12 +164,12 @@ export default function WidgetGrid({
 
   const handleWallpaperUpload = (e) => {
     const file = e.target.files?.[0];
-    if (file && file.type.match("image.*")) {
+    if (file?.type.match("image.*")) {
       const reader = new FileReader();
       reader.onload = (ev) => {
         const img = ev.target.result;
         setWallpaper(img);
-        if (user && hydratedRef.current) {
+        if (user?.id && hydratedRef.current) {
           debouncedSave({
             userId: user.id,
             themeColor: widgetColor,
@@ -192,6 +192,12 @@ export default function WidgetGrid({
         backgroundType: wallpaper ? "image" : "color",
         backgroundValue: wallpaper || next,
       });
+    }
+  };
+
+  const handleResetLayout = () => {
+    if (window.confirm('Reset all widgets to default layout? This cannot be undone.')) {
+      onResetLayout?.();
     }
   };
 

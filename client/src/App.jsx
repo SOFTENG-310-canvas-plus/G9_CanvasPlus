@@ -3,10 +3,10 @@ import WidgetGrid, { Widget } from "./components/WidgetGrid.jsx";
 import useGoogleCalendarEvents from "./hooks/useGoogleCalendarEvents";
 import { supabase } from "./auth/supabaseClient.js";
 
-import WeatherWidget from "./components/WeatherWidget.jsx"
-import GptWrapper from "./components/GptWrapper.jsx"
+import WeatherWidget from "./components/WeatherWidget.jsx";
+import GptWrapper from "./components/GptWrapper.jsx";
 import ClockWidget from "./components/ClockWidget.jsx";
-import SearchWidget from "./components/SearchWidget.jsx"
+import SearchWidget from "./components/SearchWidget.jsx";
 import DailyScheduleWidget from "./components/DailyScheduleWidget.jsx";
 import TodoWidget from "./components/TodoWidget.jsx";
 import NotesWidget from './components/NotesWidget';
@@ -100,8 +100,22 @@ export default function App() {
     });
   }, [user, saveLayout]);
 
-  // Hook must be called at component top-level
-  const { events, loading, error, needsAuth, signIn } = useGoogleCalendarEvents();
+  // Show loading screen while fetching layout from Supabase
+  if (loading) {
+    return <div style={{ padding: 20, textAlign: 'center' }}>Loading dashboard...</div>;
+  }
+
+  // Get columns based on breakpoint
+  let cols;
+  if (currentBreakpoint === 'lg') {
+    cols = 17;
+  } else if (currentBreakpoint === 'md') {
+    cols = 10;
+  } else if (currentBreakpoint === 'sm') {
+    cols = 6;
+  } else {
+    cols = 4;
+  }
 
   // Wait for both user and layout to load
   if (!userLoaded || isLoading) {

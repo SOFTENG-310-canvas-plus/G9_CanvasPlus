@@ -1,5 +1,10 @@
+// =============================
+// File: app.jsx
+// =============================
+
 import React, { useState, useCallback, useEffect } from "react";
-import WidgetGrid, { Widget } from "./components/WidgetGrid.jsx";
+import WidgetGrid from "./components/widget-grid/WidgetGrid.jsx";
+import Widget from "./components/widget-grid/Widget.jsx";
 import useGoogleCalendarEvents from "./hooks/useGoogleCalendarEvents";
 import useWidgetLayout from "./hooks/useWidgetLayout";
 import { supabase } from "./auth/supabaseClient.js";
@@ -14,7 +19,6 @@ import NotesWidget from './components/NotesWidget';
 import CanvasWidget from "./components/CanvasWidget.jsx";
 import LinkVaultWidget from "./components/LinkVaultWidget.jsx";
 
-const BOUNCE_TIME = 800; // ms
 const SIGN_IN_BUTTON_STYLE = {
   background: '#6366f1',
   color: 'white',
@@ -76,7 +80,7 @@ export default function App() {
     return () => sub?.subscription?.unsubscribe?.();
   }, []);
 
-  // Layout management
+  // Layout management with responsive breakpoints
   const { layout, loading, updateLayout, resetLayout, currentBreakpoint } = useWidgetLayout(user);
 
   // Calendar hook
@@ -106,19 +110,43 @@ export default function App() {
 
   // Show loading screen while fetching layout from Supabase
   if (loading) {
-    return <div style={{ padding: 20, textAlign: 'center' }}>Loading dashboard...</div>;
+    return (
+      <div style={{ 
+        padding: 20, 
+        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        fontSize: 'clamp(14px, 3vw, 16px)'
+      }}>
+        Loading dashboard...
+      </div>
+    );
   }
 
-  // Get columns based on breakpoint
+  // Get responsive columns based on breakpoint
   let cols;
-  if (currentBreakpoint === 'lg') {
-    cols = 17;
-  } else if (currentBreakpoint === 'md') {
-    cols = 10;
-  } else if (currentBreakpoint === 'sm') {
-    cols = 6;
-  } else {
-    cols = 4;
+  switch (currentBreakpoint) {
+    case 'xs':
+      cols = 2;
+      break;
+    case 'sm':
+      cols = 4;
+      break;
+    case 'md':
+      cols = 6;
+      break;
+    case 'lg':
+      cols = 8;
+      break;
+    case 'xl':
+      cols = 12;
+      break;
+    case '2xl':
+    default:
+      cols = 17;
+      break;
   }
 
   return (

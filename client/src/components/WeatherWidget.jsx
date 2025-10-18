@@ -1,5 +1,6 @@
 // Ip fetching, weather getting, power munching ahh function
 import React, { useEffect, useState } from "react";
+
 // why must the weather codes be like this...
 const WMO = {
     0: "Clear",
@@ -116,50 +117,101 @@ export default function WeatherWidget() {
         return () => { cancelled = true; };
     }, []);
 
-    if (!state.loaded) return <div>Loading weather…</div>;
-    if (state.error) return <div style={{ color: "salmon" }}>Weather error: {state.error}</div>; // oh piss
+    if (!state.loaded) {
+        return (
+            <div style={{ 
+                padding: 'var(--space-4)', 
+                fontSize: 'var(--font-sm)',
+                color: 'rgba(255,255,255,0.7)',
+            }}>
+                Loading weather…
+            </div>
+        );
+    }
+    
+    if (state.error) {
+        return (
+            <div style={{ 
+                color: "salmon", 
+                padding: 'var(--space-4)',
+                fontSize: 'var(--font-sm)',
+            }}>
+                Weather error: {state.error}
+            </div>
+        ); // oh piss
+    }
 
     const { dateStr, place, temp, desc, icon } = state.data;
     return (
-        <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        <div style={{ position: "relative", width: "100%", height: "100%", padding: 'var(--space-2)' }}>
             {/* Top-Right: date */}
-            <div style={{ position: "absolute", top: 0, right: 0, fontSize: 12, opacity: 0.75, textAlign: "right" }}>
+            <div style={{ 
+                position: "absolute", 
+                top: 'var(--space-2)', 
+                right: 'var(--space-2)', 
+                fontSize: 'var(--font-xs)', 
+                opacity: 0.75, 
+                textAlign: "right" 
+            }}>
                 {dateStr}
             </div>
 
             {/* Top-left: location (bold) + smaller weather text */}
-            <div style={{ position: "absolute", top:0, left:0, textAlign: "left" }}>
-                <div style={{ fontSize: 16, fontWeight: 600 }}>{place}</div>
-                <div style={{ fontSize: 12, opacity: 0.85 }}>{desc}</div>
+            <div style={{ 
+                position: "absolute", 
+                top: 'var(--space-2)', 
+                left: 'var(--space-2)', 
+                textAlign: "left" 
+            }}>
+                <div style={{ 
+                    fontSize: 'var(--font-base)', 
+                    fontWeight: 600,
+                    wordWrap: 'break-word',
+                    maxWidth: '120px',
+                }}>
+                    {place}
+                </div>
+                <div style={{ 
+                    fontSize: 'var(--font-xs)', 
+                    opacity: 0.85,
+                    wordWrap: 'break-word',
+                    maxWidth: '120px',
+                }}>
+                    {desc}
+                </div>
             </div>
 
-            {/* Center: large symbol and temperature */}
             {/* CENTER: emoji */}
             <div
                 style={{
                     position: "absolute",
                     left: "50%",
                     top: "40%",
-                    transform: "translate(-50%, -50%)", // perfect center
+                    transform: "translate(-50%, -50%)",
                     lineHeight: 0,
                 }}
             >
-      <span role="img" aria-label={desc} style={{ fontSize: 56, lineHeight: 1 }}>
-        {icon}
-      </span>
+                <span role="img" aria-label={desc} style={{ 
+                    fontSize: 'clamp(3rem, 10vw, 3.5rem)', 
+                    lineHeight: 1,
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+                }}>
+                    {icon}
+                </span>
             </div>
 
-            {/* BOTTOM: temperature (sits between bottom edge and the emoji) */}
+            {/* BOTTOM: temperature */}
             <div
                 style={{
                     position: "absolute",
                     left: 0,
                     right: 0,
-                    bottom: 6,              // nudge as you like
+                    bottom: 'var(--space-2)',
                     textAlign: "center",
-                    fontSize: 30,
+                    fontSize: 'clamp(1.5rem, 6vw, 1.875rem)',
                     fontWeight: 700,
                     lineHeight: 1,
+                    textShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 }}
             >
                 {temp}°C

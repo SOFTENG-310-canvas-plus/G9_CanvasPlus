@@ -26,17 +26,17 @@ const debounce = (fn, ms = 300) => {
 };
 
 export default function WidgetGrid({
-                                     cols = 12,
-                                     rows = 8,
-                                     cellW = 96, // initial fallback only
-                                     rowH = 96, // initial fallback only
-                                     gap = 16,
-                                     showGrid = true,
-                                     className = "",
-                                     style = {},
-                                     children,
-                                     onResetLayout,
-                                   }) {
+  cols = 12,
+  rows = 8,
+  cellW = 96,
+  rowH = 96,
+  gap = 16,
+  showGrid = true,
+  className = "",
+  style = {},
+  children,
+  onResetLayout,
+}) {
   const containerRef = useRef(null);
   const clipRef = useRef(null);
   const wallpaperRef = useRef(null);
@@ -49,12 +49,62 @@ export default function WidgetGrid({
   // Logout hook
   const { signOut, isLoading: isLoggingOut } = useSignOut();
 
-  // Derived cell sizes so the grid fills the viewport area exactly
+  // Responsive state
+  const [viewport, setViewport] = useState('desktop');
   const [cw, setCw] = useState(cellW);
   const [rh, setRh] = useState(rowH);
+  const [responsiveCols, setResponsiveCols] = useState(cols);
+  const [responsiveGap, setResponsiveGap] = useState(gap);
 
   // gate saving until DB has hydrated
   const hydratedRef = useRef(false);
+
+  // Determine viewport size
+  useEffect(() => {
+    const updateViewport = () => {
+      const width = window.innerWidth;
+      if (width < 480) setViewport('xs');
+      else if (width < 640) setViewport('sm');
+      else if (width < 768) setViewport('md');
+      else if (width < 1024) setViewport('lg');
+      else if (width < 1280) setViewport('xl');
+      else setViewport('2xl');
+    };
+
+    updateViewport();
+    const debouncedUpdate = debounce(updateViewport, 150);
+    window.addEventListener('resize', debouncedUpdate);
+    return () => window.removeEventListener('resize', debouncedUpdate);
+  }, []);
+
+  // Adjust cols and gap based on viewport
+  useEffect(() => {
+    switch (viewport) {
+      case 'xs':
+        setResponsiveCols(2);
+        setResponsiveGap(8);
+        break;
+      case 'sm':
+        setResponsiveCols(4);
+        setResponsiveGap(12);
+        break;
+      case 'md':
+        setResponsiveCols(6);
+        setResponsiveGap(12);
+        break;
+      case 'lg':
+        setResponsiveCols(8);
+        setResponsiveGap(16);
+        break;
+      case 'xl':
+        setResponsiveCols(12);
+        setResponsiveGap(16);
+        break;
+      default:
+        setResponsiveCols(cols);
+        setResponsiveGap(gap);
+    }
+  }, [viewport, cols, gap]);
 
   // auth
   useEffect(() => {
@@ -74,18 +124,13 @@ export default function WidgetGrid({
         if (prefs.theme_color) setWidgetColor(prefs.theme_color);
         if (prefs.background_type === "image" && prefs.background_value) {
           setWallpaper(prefs.background_value);
-        } else if (prefs.background_type === "color" && prefs.background_value) {
-          // use solid-color background mode (optional)
-          setWallpaper(null);
-          // If you want to apply page bg color, uncomment:
-          // document.body.style.backgroundColor = prefs.background_value;
         }
       }
       hydratedRef.current = true;
     })();
   }, [user]);
 
-  // auto-save when prefs change, but only after hydration
+  // auto-save when prefs change
   useEffect(() => {
     if (!user || !hydratedRef.current) return;
     saveUserPreferences({
@@ -98,10 +143,10 @@ export default function WidgetGrid({
 
   // debounced explicit save from handlers
   const debouncedSave = useRef(
-      debounce((payload) => saveUserPreferences(payload).catch(console.error), 300)
+    debounce((payload) => saveUserPreferences(payload).catch(console.error), 300)
   ).current;
 
-  // Recompute cell sizes from the clip's live size
+  // Recompute cell sizes responsively
   useLayoutEffect(() => {
     const el = clipRef.current;
     if (!el) return;
@@ -111,11 +156,11 @@ export default function WidgetGrid({
       const availW = rect.width;
       const availH = rect.height;
 
-      const nextCw = (availW - (cols - 1) * gap) / cols;
-      const nextRh = (availH - (rows - 1) * gap) / rows;
+      const nextCw = (availW - (responsiveCols - 1) * responsiveGap) / responsiveCols;
+      const nextRh = (availH - (rows - 1) * responsiveGap) / rows;
 
-      setCw(nextCw);
-      setRh(nextRh);
+      setCw(Math.max(nextCw, 40)); // Minimum cell width
+      setRh(Math.max(nextRh, 40)); // Minimum cell height
     };
 
     recompute();
@@ -133,17 +178,17 @@ export default function WidgetGrid({
       window.removeEventListener("resize", onVV);
       window.visualViewport?.removeEventListener?.("resize", onVV);
     };
-  }, [cols, rows, gap]);
+  }, [responsiveCols, rows, responsiveGap]);
 
-  const gridW = cols * cw + (cols - 1) * gap;
-  const gridH = rows * rh + (rows - 1) * gap;
+  const gridW = responsiveCols * cw + (responsiveCols - 1) * responsiveGap;
+  const gridH = rows * rh + (rows - 1) * responsiveGap;
 
-  // Subtle parallax wallpaper
+  // Parallax wallpaper with reduced motion check
   useEffect(() => {
     if (!wallpaperRef.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const handlePointerMove = (e) => {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const rect = wallpaperRef.current.getBoundingClientRect();
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
@@ -205,18 +250,18 @@ export default function WidgetGrid({
   };
 
   const ctxValue = useMemo(() => {
-    const spanX = cw + gap;
-    const spanY = rh + gap;
+    const spanX = cw + responsiveGap;
+    const spanY = rh + responsiveGap;
 
     const cellToPxRect = (c, r, w, h) => ({
       x: c * spanX,
       y: r * spanY,
-      w: w * cw + (w - 1) * gap,
-      h: h * rh + (h - 1) * gap,
+      w: w * cw + (w - 1) * responsiveGap,
+      h: h * rh + (h - 1) * responsiveGap,
     });
 
     const clampToBounds = (c, r, w, h) => {
-      const maxC = Math.max(0, cols - w);
+      const maxC = Math.max(0, responsiveCols - w);
       const maxR = Math.max(0, rows - h);
       return {
         c: Math.min(Math.max(0, c), maxC),
@@ -230,11 +275,11 @@ export default function WidgetGrid({
     });
 
     return {
-      cols,
+      cols: responsiveCols,
       rows,
       cellW: cw,
       rowH: rh,
-      gap,
+      gap: responsiveGap,
       gridW,
       gridH,
       spanX,
@@ -244,8 +289,9 @@ export default function WidgetGrid({
       cellToPxRect,
       clampToBounds,
       deltaPxToDeltaCells,
+      viewport,
     };
-  }, [cols, rows, cw, rh, gap, gridW, gridH, widgetColor]);
+  }, [responsiveCols, rows, cw, rh, responsiveGap, gridW, gridH, widgetColor, viewport]);
 
   return (
     <GridCtx.Provider value={ctxValue}>
@@ -404,7 +450,7 @@ export default function WidgetGrid({
               height: gridH,
               "--cell-width": `${cw}px`,
               "--cell-height": `${rh}px`,
-              "--grid-gap": `${gap}px`,
+              "--grid-gap": `${responsiveGap}px`,
               ...style,
             }}
           >

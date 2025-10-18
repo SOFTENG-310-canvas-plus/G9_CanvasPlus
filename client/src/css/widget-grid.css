@@ -1,3 +1,5 @@
+@import './tokens.css';
+
 :root {
   --ios-wallpaper-1: #6EB6FF;
   --ios-wallpaper-2: #8BD2FF;
@@ -28,20 +30,32 @@
   }
 }
 
-/* Outer container: let fixed overlays show outside */
-.ios-widget-grid-container { margin: 0; }
-.ios-grid-clip {
-  width: 100dvw;  /* dynamic viewport (iOS/Android safe) */
-  height: 100dvh;
+/* Container - responsive padding */
+.ios-widget-grid-container {
+  margin: 0;
+  padding: var(--safe-area-inset-top) var(--safe-area-inset-right) 
+           var(--safe-area-inset-bottom) var(--safe-area-inset-left);
 }
 
-/* New inner clip layer holds wallpaper + grid with rounded corners */
 .ios-grid-clip {
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile */
   position: relative;
-  border-radius: 16px;
-  overflow: hidden;             /* only this layer clips */
+  border-radius: 0; /* Remove on mobile */
+  overflow: hidden;
   isolation: isolate;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive border radius */
+@media (min-width: 768px) {
+  .ios-grid-clip {
+    border-radius: 16px;
+    width: calc(100vw - var(--space-8));
+    height: calc(100vh - var(--space-8));
+    margin: var(--space-4);
+  }
 }
 
 .ios-wallpaper {
@@ -67,9 +81,28 @@
 
 .ios-widget-grid {
   position: relative;
-  border-radius: 16px;
+  border-radius: 0;
   background-color: transparent;
+  margin: 0 auto;
+  padding: var(--space-4);
   z-index: 1;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Responsive padding */
+@media (min-width: 768px) {
+  .ios-widget-grid {
+    padding: var(--space-6);
+    border-radius: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ios-widget-grid {
+    padding: var(--space-8);
+  }
 }
 
 .ios-widget-grid.show-grid {
@@ -82,77 +115,85 @@
 
 .ios-widget {
   position: absolute;
-  border-radius: 16px;
+  border-radius: 12px; /* Slightly smaller on mobile */
   overflow: hidden;
-  transition: box-shadow 160ms, filter 160ms;
+  transition: box-shadow 160ms, filter 160ms, transform 160ms;
   box-sizing: border-box;
-  background: transparent;             /* glass lives on ::before */
+  background: transparent;
   box-shadow: 
     0 4px 20px var(--ios-shadow),
     inset 0 0 0 1px var(--ios-highlight),
     0 0 0 1px var(--ios-stroke);
+  min-width: 80px; /* Prevent too-small widgets */
+  min-height: 80px;
 }
 
-/* Glass + tint UNDER content, non-interactive, no containing-block issues */
+@media (min-width: 768px) {
+  .ios-widget {
+    border-radius: 16px;
+  }
+}
+
 .ios-widget::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
-  pointer-events: none;
   background: var(--ios-glass-bg);
-  -webkit-backdrop-filter: saturate(1.8) blur(20px);
-  backdrop-filter: saturate(1.8) blur(20px);
+  backdrop-filter: saturate(1.8) blur(24px);
+  -webkit-backdrop-filter: saturate(1.8) blur(24px);
+  z-index: -1;
+  border-radius: inherit;
 }
-
-.ios-widget::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  /* mild accent tint; tweak percentage if you want */
-  background: color-mix(in srgb, var(--accent-color) 16%, transparent);
-}
-
-/* Ensure real content sits above the overlays */
-.ios-widget-handle,
-.ios-widget-content {
-  position: relative;
-  z-index: 1;
-}
-
 
 .ios-widget.dragging {
-  /* keep the stronger blur on the underlay only */
+  z-index: 10;
+  filter: brightness(1.1);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    inset 0 0 0 1px var(--ios-highlight),
+    0 0 0 1px var(--ios-stroke);
+  transform: scale(1.02);
 }
 
-.ios-widget.dragging::before {
-  -webkit-backdrop-filter: saturate(1.8) blur(24px);
-  backdrop-filter: saturate(1.8) blur(24px);
+@media (prefers-reduced-motion: reduce) {
+  .ios-widget.dragging {
+    transform: none;
+  }
 }
 
 .ios-widget-handle {
   height: 36px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   background: rgba(255, 255, 255, 0.2);
   border-bottom: 1px solid color-mix(in srgb, var(--accent-color) 25%, transparent);
   user-select: none;
   cursor: grab;
   color: var(--ios-text);
-  font-size: 13px;
+  font-size: var(--font-sm);
   letter-spacing: 0.2px;
   transition: background 160ms;
+  min-height: var(--touch-target-min); /* Touch-friendly */
 }
 
-
+/* Larger touch target on mobile */
+@media (max-width: 767px) {
+  .ios-widget-handle {
+    height: var(--touch-target-comfortable);
+    padding: 0 var(--space-4);
+  }
+}
 
 .ios-widget-handle:active,
 .ios-widget.dragging .ios-widget-handle {
   cursor: grabbing;
+}
+
+.ios-widget-handle:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: -2px;
 }
 
 .ios-widget-grabber {
@@ -172,23 +213,33 @@
   font-weight: 500;
   opacity: 0.9;
   color: var(--accent-color);
+  font-size: var(--font-sm);
 }
 
 .ios-widget-hint {
   margin-left: auto;
-  font-size: 11px;
+  font-size: var(--font-xs);
   opacity: 0.6;
 }
 
 .ios-widget-content {
-  padding: 12px;
+  padding: var(--space-3);
   width: 100%;
   height: calc(100% - 36px);
   overflow: auto;
   box-sizing: border-box;
   color: var(--ios-text);
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: var(--font-sm);
+  line-height: var(--leading-normal);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Larger padding on bigger screens */
+@media (min-width: 768px) {
+  .ios-widget-content {
+    padding: var(--space-4);
+    font-size: var(--font-base);
+  }
 }
 
 .ios-widget-ghost {
@@ -200,10 +251,11 @@
   z-index: 5;
 }
 
+/* Settings button - responsive positioning */
 .ios-settings-button {
-  position: absolute;
-  top: 16px;
-  right: 16px;
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
   z-index: 20;
   width: 40px;
   height: 40px;
@@ -222,41 +274,73 @@
   align-items: center;
   justify-content: center;
   transition: transform 0.2s;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
 }
 
+.ios-settings-button:hover {
+  transform: scale(1.05);
+}
 
+.ios-settings-button:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ios-settings-button:hover {
+    transform: none;
+  }
+}
+
+/* Settings panel - responsive */
 .ios-settings-panel {
-  position: absolute;
-  top: 70px;
-  right: 16px;
+  position: fixed;
+  top: var(--space-16);
+  right: var(--space-4);
   z-index: 20;
   background: var(--ios-glass-bg);
   backdrop-filter: saturate(1.8) blur(20px);
   -webkit-backdrop-filter: saturate(1.8) blur(20px);
   border-radius: 16px;
-  padding: 16px;
+  padding: var(--space-4);
   box-shadow: 
     0 8px 30px var(--ios-shadow),
     inset 0 0 0 1px var(--ios-highlight),
     0 0 0 1px var(--ios-stroke);
   min-width: 250px;
+  max-width: calc(100vw - var(--space-8));
   color: var(--ios-text);
 }
 
+/* Full-width on small screens */
+@media (max-width: 767px) {
+  .ios-settings-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    max-width: 100%;
+    padding: var(--space-6) var(--space-4) calc(var(--space-6) + var(--safe-area-inset-bottom));
+  }
+}
+
 .ios-settings-panel h3 {
-  margin: 0 0 16px 0;
-  font-size: 16px;
+  margin: 0 0 var(--space-4) 0;
+  font-size: var(--font-lg);
   font-weight: 600;
 }
 
 .ios-setting-group {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .ios-setting-group label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-sm);
   font-weight: 500;
 }
 
@@ -380,27 +464,27 @@
 }
 
 .color-preview {
-  margin-top: 8px;
-  padding: 8px;
+  margin-top: var(--space-2);
+  padding: var(--space-2);
   border-radius: 8px;
   text-align: center;
-  font-size: 12px;
+  font-size: var(--font-xs);
   background: rgba(255, 255, 255, 0.1);
 }
 
 .ios-wallpaper-upload {
   width: 100%;
-  padding: 8px;
+  padding: var(--space-2);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid var(--ios-stroke);
   color: var(--ios-text);
-  font-size: 14px;
+  font-size: var(--font-sm);
 }
 
 .ios-close-settings {
   width: 100%;
-  padding: 10px;
+  padding: var(--space-3);
   border-radius: 8px;
   background: var(--accent-color);
   border: none;
@@ -408,66 +492,30 @@
   font-weight: 500;
   cursor: pointer;
   transition: opacity 0.2s;
+  min-height: var(--touch-target-min);
+  font-size: var(--font-base);
 }
 
 .ios-close-settings:hover {
   opacity: 0.9;
 }
 
+.ios-close-settings:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+/* Widget content helpers */
 .widget-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-}
-
-.weather-widget {
   text-align: center;
 }
 
-.weather-icon {
-  font-size: 32px;
-  margin-bottom: 8px;
-}
-
-.weather-temp {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.weather-location {
-  font-size: 14px;
-  opacity: 0.8;
-}
-
-.calendar-widget {
-  width: 100%;
-}
-
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.calendar-day {
-  text-align: center;
-  padding: 4px;
-  border-radius: 8px;
-}
-
-.calendar-day.current {
-  background-color: var(--accent-color);
-  color: white;
-}
-
+/* Prevent layout shift */
 .ios-widget,
 .ios-widget-grid,
 .ios-grid-clip,

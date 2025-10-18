@@ -23,22 +23,12 @@ user interface where students can see upcoming Canvas deadlines, events
 and AI‑generated content. Vite handles local development, hot‑module
 reloading and production builds.
 
-### Server
+### Supabase
 
-The `server` folder is a Spring Boot application. It exposes REST
-endpoints that the front‑end consumes. Endpoints include:
+The `supabase` folder contains backend logic and API calls that enable AI-powered functionality for the client.
+It handles the connection between the server, the Supabase database, and the OpenAI API — allowing the app to store data, retrieve tasks, and generate GPT-based insights.
 
-- `GET /api/ai/ping` -- returns `ok` to indicate the AI service is
-  alive
-- `POST /api/ai/complete` -- accepts a plain‑text prompt and returns a
-  completion from
-  OpenAI
-- `GET /api/db/ping` -- pings the database and returns the server time
-  and DB
-  user.
-
-The server uses environment variables for secrets such as the OpenAI API
-key and Supabase credentials; these are defined in a `.env` file and
+The server uses environment variables for secrets such as the supabase credentials; these are defined in a `.env` file and
 referenced in
 `server/src/main/resources/application.properties`
 
